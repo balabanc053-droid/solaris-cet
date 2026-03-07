@@ -1,42 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap');
-@import "tailwindcss";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-serif: "Cormorant Garamond", serif;
-  
-  --color-bridge-glow: #00ffcc;
-  --color-bridge-dark: #0a0a0a;
-  --color-bridge-accent: #f27d26;
-}
-
-@layer base {
-  body {
-    @apply bg-[var(--color-bridge-dark)] text-white font-sans antialiased overflow-x-hidden;
-  }
-}
-
-.glass {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10;
-}
-
-.glow-text {
-  text-shadow: 0 0 10px var(--color-bridge-glow);
-}
-
-.bridge-grid {
-  background-image: linear-gradient(rgba(0, 255, 204, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 204, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
