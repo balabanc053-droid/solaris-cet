@@ -1,136 +1,76 @@
-# SOLARIS CET - Deployment Guide
+@echo off
+chcp 65001 >nul
+echo ============================================
+echo   SOLARIS CET - Deployment Script
+echo ============================================
+echo.
 
-## GitHub Pages Deployment
+REM Check if we're in the right directory
+if not exist "package.json" (
+    echo ERROR: Nu s-a gasit package.json
+    echo Te rog sa rulezi acest script din folderul 'app'
+    pause
+    exit /b 1
+)
 
-### Method 1: Deploy from docs folder (Recommended)
+echo [1/5] Se sterge folderul docs vechi...
+if exist "docs" (
+    rmdir /s /q docs
+    echo      ✓ Folderul docs a fost sters
+) else (
+    echo      ✓ Folderul docs nu exista
+)
 
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial deployment"
-   git push origin main
-   ```
+echo.
+echo [2/5] Se copiaza fisierele din dist in docs...
+if exist "dist" (
+    xcopy /E /I /Y dist docs
+    echo      ✓ Fisierele au fost copiate
+) else (
+    echo ERROR: Folderul dist nu exista! Ruleaza 'npm run build' mai intai.
+    pause
+    exit /b 1
+)
 
-2. **Configure GitHub Pages**
-   - Go to your repository on GitHub
-   - Navigate to **Settings** → **Pages**
-   - Under "Source", select **Deploy from a branch**
-   - Select **main** branch and **/docs** folder
-   - Click **Save**
+echo.
+echo [3/5] Se adauga fisierele in Git...
+git add docs/
+if %errorlevel% neq 0 (
+    echo ERROR: Git add a esuat
+    pause
+    exit /b 1
+)
+echo      ✓ Fisierele au fost adaugate in Git
 
-3. **Wait for deployment**
-   - GitHub will build and deploy your site
-   - This usually takes 1-2 minutes
-   - Your site will be available at: `https://aamclaudiu-hash.github.io/solaris-cet/`
+echo.
+echo [4/5] Se face commit...
+git commit -m "Fix: Update base path for GitHub Pages deployment"
+if %errorlevel% neq 0 (
+    echo      ! Commit a esuat (posibil nu sunt modificari noi)
+)
+echo      ✓ Commit realizat
 
-### Method 2: GitHub Actions (Automated)
-
-Create `.github/workflows/deploy.yml`:
-
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build
-        run: npm run build
-        
-      - name: Copy to docs
-        run: |
-          rm -rf docs
-          cp -r dist docs
-          
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-```
-
-## Custom Domain Setup
-
-1. **Add CNAME file**
-   Create `docs/CNAME` with your domain:
-   ```
-   solariscet.io
-   ```
-
-2. **Configure DNS**
-   Add these records to your DNS provider:
-   
-   | Type | Name | Value |
-   |------|------|-------|
-   | A | @ | 185.199.108.153 |
-   | A | @ | 185.199.109.153 |
-   | A | @ | 185.199.110.153 |
-   | A | @ | 185.199.111.153 |
-   | CNAME | www | aamclaudiu-hash.github.io |
-
-3. **Enable HTTPS**
-   - In GitHub Pages settings, check "Enforce HTTPS"
-
-## Verification
-
-After deployment, verify:
-
-1. **Site is accessible**: Visit `https://aamclaudiu-hash.github.io/solaris-cet/`
-2. **Meta tags**: Check with [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
-3. **SEO**: Test with [Google Rich Results Test](https://search.google.com/test/rich-results)
-4. **Performance**: Analyze with [PageSpeed Insights](https://pagespeed.web.dev/)
-
-## Troubleshooting
-
-### 404 Errors
-- Ensure `index.html` exists in docs folder
-- Check GitHub Pages source is set to `/docs`
-
-### Assets not loading
-- Verify `base` in `vite.config.ts` matches your repo name:
-  ```typescript
-  base: '/solaris-cet/'
-  ```
-
-### Cache issues
-- Clear browser cache
-- Add cache-busting to assets
-- Use `?v=2` query parameter
-
-## Updates
-
-To update the site:
-
-```bash
-# Make changes
-npm run build
-
-# Copy to docs
-rm -rf docs
-cp -r dist docs
-
-# Commit and push
-git add .
-git commit -m "Update site"
+echo.
+echo [5/5] Se face push pe GitHub...
 git push origin main
-```
+if %errorlevel% neq 0 (
+    echo ERROR: Push a esuat
+    pause
+    exit /b 1
+)
+echo      ✓ Push realizat cu succes
 
-GitHub Pages will automatically redeploy.
+echo.
+echo ============================================
+echo   ✅ DEPLOYMENT COMPLET!
+echo ============================================
+echo.
+echo Site-ul tau va fi disponibil in 2-3 minute la:
+echo https://aamclaudiu-hash.github.io/solaris-cet/
+echo.
+echo Nu uita sa:
+echo 1. Asteapti 2-3 minute
+echo 2. Stergi cache-ul browserului (Ctrl+Shift+R)
+echo 3. Accesezi link-ul de mai sus
+echo.
+pause
