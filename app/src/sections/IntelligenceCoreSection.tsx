@@ -172,7 +172,11 @@ const IntelligenceCoreSection = () => {
                 >
                   <span
                     className="text-[10px] font-bold px-2 py-0.5 rounded mr-2"
-                    style={{ color: step.color, borderWidth: '1px', borderStyle: 'solid', borderColor: step.color, opacity: i === reactStep ? 1 : 0.7 }}
+                    style={{
+                      color: step.color,
+                      border: `1px solid ${step.color}`,
+                      opacity: i === reactStep ? 1 : 0.7,
+                    }}
                   >
                     {step.phase}
                   </span>
