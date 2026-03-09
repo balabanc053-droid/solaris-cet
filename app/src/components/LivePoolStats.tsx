@@ -4,10 +4,19 @@ import { useLivePoolData } from '../hooks/useLivePoolData';
 const DEDUST_POOL_URL =
   'https://dedust.io/pools/EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB';
 
-const formatNano = (raw: string): string => {
+const formatNanoTon = (raw: string): string => {
   const num = Number(raw);
   if (isNaN(num)) return raw;
   if (num >= 1e9) return `${(num / 1e9).toFixed(2)} TON`;
+  if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+  if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
+  return `${num.toFixed(2)}`;
+};
+
+const formatNanoCet = (raw: string): string => {
+  const num = Number(raw);
+  if (isNaN(num)) return raw;
+  if (num >= 1e9) return `${(num / 1e9).toFixed(2)} CET`;
   if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
   if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
   return `${num.toFixed(2)}`;
@@ -18,10 +27,10 @@ const LivePoolStats = () => {
 
   const stats = data
     ? [
-        { label: 'TON Reserve', value: formatNano(data.reserveLeft), color: 'cyan' },
-        { label: 'CET Reserve', value: formatNano(data.reserveRight), color: 'gold' },
+        { label: 'TON Reserve', value: formatNanoTon(data.reserveLeft), color: 'cyan' },
+        { label: 'CET Reserve', value: formatNanoCet(data.reserveRight), color: 'gold' },
         { label: 'LP Fee', value: data.lpFee !== '—' ? `${(Number(data.lpFee) / 10).toFixed(2)}%` : '—', color: 'emerald' },
-        { label: 'LP Supply', value: formatNano(data.totalSupply), color: 'purple' },
+        { label: 'LP Supply', value: formatNanoTon(data.totalSupply), color: 'purple' },
       ]
     : [];
 
