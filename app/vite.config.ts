@@ -92,7 +92,12 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            return id.split('node_modules/')[1].split('/')[0];
+            const pkg = id.split('node_modules/')[1];
+            // Handle scoped packages like @radix-ui/react-dialog
+            if (pkg.startsWith('@')) {
+              return pkg.split('/').slice(0, 2).join('/');
+            }
+            return pkg.split('/')[0];
           }
           return undefined;
         },
