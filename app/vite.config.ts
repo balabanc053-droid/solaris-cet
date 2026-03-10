@@ -82,10 +82,41 @@ export default defineConfig({
               },
             },
           },
+          {
+            // Cache onnxruntime-web WASM binaries from the CDN with a
+            // CacheFirst strategy: the versioned URL never changes, so a
+            // cached copy is served indefinitely, enabling fully-offline
+            // AI inference via the Service Worker.
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web\//i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ort-wasm-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
       },
     }),
   ],
+  // Workers that use dynamic import() (e.g. onnxruntime-web) need ESM format;
+  // the default IIFE format does not support code-splitting.
+  worker: {
+    format: 'es',
+  },
+  // Prevent Vite from pre-bundling onnxruntime-web: it ships its own WASM
+  // binaries that must not be transformed by esbuild's pre-bundler.
+  // The library is only imported dynamically inside aiWorker.ts, so it never
+  // lands in the main-thread bundle regardless of this setting; the exclusion
+  // ensures the dev-server also handles the import correctly.
+  optimizeDeps: {
+    exclude: ['onnxruntime-web'],
+  },
   build: {
     target: 'esnext',
     rollupOptions: {

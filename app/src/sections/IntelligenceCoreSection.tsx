@@ -3,6 +3,11 @@ import { gsap } from 'gsap';
 import { Brain, Lightbulb, Play, Eye, Zap } from 'lucide-react';
 import AgentBridge from '../components/AgentBridge';
 import GlowOrbs from '../components/GlowOrbs';
+import { useAiWorker } from '../hooks/useAiWorker';
+
+// Simulated token-analytics feature vector fed into the AI worker:
+// [price_norm, volume24h_norm, liquidity_norm, price_change_7d, mcap_ratio]
+const TOKEN_FEATURES = [0.72, 0.88, 0.64, 0.15, 0.43];
 
 
 const steps = [
@@ -20,6 +25,37 @@ const IntelligenceCoreSection = () => {
   const rightCardRef = useRef<HTMLDivElement>(null);
   const chipsRef = useRef<HTMLDivElement>(null);
   const [reactStep, setReactStep] = useState(0);
+  const [aiSignal, setAiSignal] = useState<number | null>(null);
+
+  // Run token-analytics inference in a dedicated Web Worker so the main
+  // thread stays unblocked. Results use the built-in JS fallback (no model
+  // file required); set a model URL via `loadModel` for ONNX inference.
+  const { runInference, queryMemory } = useAiWorker({
+    onResult: (output) => {
+      // Use the mean of the output scores as a single "signal strength" value.
+      if (output.scores.length > 0) {
+        const mean = output.scores.reduce((s, v) => s + v, 0) / output.scores.length;
+        setAiSignal(Number(mean.toFixed(3)));
+      }
+    },
+  });
+
+  // Periodically push fresh analytics inputs to the worker.
+  useEffect(() => {
+    runInference({ features: TOKEN_FEATURES, label: 'cet-analytics' });
+    queryMemory();
+
+    const interval = setInterval(() => {
+      // Jitter the feature vector slightly to simulate live data updates.
+      const jittered = TOKEN_FEATURES.map(v =>
+        Math.max(0, Math.min(1, v + (Math.random() - 0.5) * 0.05)),
+      );
+      runInference({ features: jittered, label: 'cet-analytics' });
+      queryMemory();
+    }, 8_000);
+
+    return () => clearInterval(interval);
+  }, [runInference, queryMemory]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -227,9 +263,19 @@ const IntelligenceCoreSection = () => {
           <div className="absolute bottom-6 left-6 right-6">
             <div className="holo-line mb-3" />
             <div className="hud-label text-solaris-cyan mb-2">REASONING TRACE</div>
-            <div className="flex items-center gap-2 text-solaris-text text-sm">
-              <div className="w-2 h-2 rounded-full bg-solaris-cyan animate-pulse" />
-              Verifiable AI Decision Loops
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-solaris-text text-sm">
+                <div className="w-2 h-2 rounded-full bg-solaris-cyan animate-pulse" />
+                Verifiable AI Decision Loops
+              </div>
+              {aiSignal !== null && (
+                <div className="flex items-center gap-1.5">
+                  <span className="hud-label text-[9px] text-solaris-gold">AI SIGNAL</span>
+                  <span className="font-mono text-xs text-solaris-gold font-semibold">
+                    {aiSignal > 0 ? '+' : ''}{aiSignal.toFixed(3)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
