@@ -1,6 +1,6 @@
 import { useRef, useLayoutEffect } from 'react';
 import { gsap } from 'gsap';
-import { BarChart2, BookOpen, Globe, ExternalLink } from 'lucide-react';
+import { BarChart2, BookOpen, Brain, Globe, ExternalLink } from 'lucide-react';
 
 interface Resource {
   name: string;
@@ -12,7 +12,7 @@ interface Resource {
 interface ResourceCategory {
   id: string;
   icon: typeof BarChart2;
-  color: 'gold' | 'cyan' | 'emerald';
+  color: 'gold' | 'cyan' | 'emerald' | 'violet';
   label: string;
   title: string;
   resources: Resource[];
@@ -101,6 +101,33 @@ const categories: ResourceCategory[] = [
       },
     ],
   },
+  {
+    id: 'ai',
+    icon: Brain,
+    color: 'violet',
+    label: 'AI & AGENTS',
+    title: 'Build Intelligence',
+    resources: [
+      {
+        name: 'AI Agents for Beginners',
+        description: 'Free 12-lesson course by Microsoft for building AI agents from the ground up — fundamentals, code examples, and hands-on exercises.',
+        href: 'https://github.com/microsoft/ai-agents-for-beginners',
+        tag: 'github.com/microsoft',
+      },
+      {
+        name: 'HuggingFace Agents Course',
+        description: 'Free intermediate-to-expert course on AI agents from HuggingFace — core concepts, code snippets, and practical build-and-deploy examples.',
+        href: 'https://huggingface.co/learn/agents-course/en/unit0/introduction',
+        tag: 'huggingface.co',
+      },
+      {
+        name: 'Prompt Engineering Guide',
+        description: 'Comprehensive free guide by DAIR.AI covering prompt engineering techniques essential for optimizing AI agents, with tutorials and research papers.',
+        href: 'https://github.com/dair-ai/Prompt-Engineering-Guide',
+        tag: 'github.com/dair-ai',
+      },
+    ],
+  },
 ];
 
 const colorMap: Record<string, { bg: string; text: string; border: string; hud: string; hoverBorder: string }> = {
@@ -124,6 +151,13 @@ const colorMap: Record<string, { bg: string; text: string; border: string; hud: 
     border: 'border-emerald-400/30',
     hud: 'text-emerald-400',
     hoverBorder: 'hover:border-emerald-400/30',
+  },
+  violet: {
+    bg: 'bg-violet-400/10',
+    text: 'text-violet-400',
+    border: 'border-violet-400/30',
+    hud: 'text-violet-400',
+    hoverBorder: 'hover:border-violet-400/30',
   },
 };
 
@@ -207,15 +241,16 @@ const ResourcesSection = () => {
           </h2>
 
           <p className="text-solaris-muted text-base lg:text-lg leading-relaxed">
-            From tracking CET on-chain to exploring the TON network and staying informed on the
-            latest research — these are the trusted platforms used by the Solaris community.
+            From tracking CET on-chain to exploring the TON network, staying informed on the
+            latest research, and learning to build AI agents — these are the trusted platforms
+            used by the Solaris community.
           </p>
         </div>
 
         {/* Resource columns */}
         <div
           ref={gridRef}
-          className="grid md:grid-cols-3 gap-6"
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {categories.map((cat) => {
             const Icon = cat.icon;
