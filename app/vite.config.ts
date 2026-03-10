@@ -61,6 +61,17 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB to cover phone-mockup.png
         runtimeCaching: [
           {
+            urlPattern: /\/api\/state\.json$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'state-json-cache',
+              expiration: {
+                maxEntries: 1,
+                maxAgeSeconds: 60 * 5, // 5 minutes
+              },
+            },
+          },
+          {
             urlPattern: /^https:\/\/api\.dedust\.io\//i,
             handler: 'NetworkFirst',
             options: {
