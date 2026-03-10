@@ -250,7 +250,7 @@ const ResourcesSection = () => {
         {/* Resource columns */}
         <div
           ref={gridRef}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
           {categories.map((cat) => {
             const Icon = cat.icon;
