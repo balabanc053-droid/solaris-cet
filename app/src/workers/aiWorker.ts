@@ -155,10 +155,10 @@ async function runSoilAnalysis(input: SoilAnalysisInput): Promise<SoilAnalysisRe
     const outputData = results['output']?.data as Float32Array;
 
     return {
-      yieldScore: Math.round(outputData[0] * 100),
+      yieldScore: Math.min(100, Math.max(0, Math.round(outputData[0] * 100))),
       irrigationNeeded: outputData[1] > 0.5,
-      fertilizerLevel: Math.round(outputData[2] * 3) as 0 | 1 | 2 | 3,
-      confidence: outputData[3],
+      fertilizerLevel: Math.min(3, Math.max(0, Math.round(outputData[2] * 3))) as 0 | 1 | 2 | 3,
+      confidence: Math.min(1, Math.max(0, outputData[3])),
     };
   } catch {
     return soilHeuristic(input);

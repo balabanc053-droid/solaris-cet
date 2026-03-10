@@ -47,7 +47,7 @@ interface PoolState {
   reserveTon: string | null;
   reserveCet: string | null;
   lpSupply: string | null;
-  pricetonPerCet: string | null;
+  priceTonPerCet: string | null;
 }
 
 interface IndexerOutput {
@@ -127,8 +127,8 @@ async function main(): Promise<void> {
         if (Array.isArray(json.reserves)) {
           reserveTon = BigInt(json.reserves[0]);
           reserveCet = BigInt(json.reserves[1]);
-          if (reserveCet > 0n) {
-            const priceFraction = (reserveTon! * NANO) / reserveCet;
+          if (reserveTon !== null && reserveCet > 0n) {
+            const priceFraction = (reserveTon * NANO) / reserveCet;
             priceTonPerCet = bigintToDecimalString(priceFraction, 9);
           }
         }
@@ -159,7 +159,7 @@ async function main(): Promise<void> {
         ? bigintToDecimalString(reserveCet, decimals)
         : null,
       lpSupply: null,
-      pricetonPerCet: priceTonPerCet,
+      priceTonPerCet: priceTonPerCet,
     },
     updatedAt: new Date().toISOString(),
   };

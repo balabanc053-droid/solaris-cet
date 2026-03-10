@@ -49,7 +49,7 @@ function ChainStateContent() {
     },
     {
       label: 'Spot Price',
-      value: pool.pricetonPerCet ? `${parseFloat(pool.pricetonPerCet).toFixed(6)} TON/CET` : '—',
+      value: pool.priceTonPerCet ? `${parseFloat(pool.priceTonPerCet).toFixed(6)} TON/CET` : '—',
       color: 'text-emerald-400',
     },
   ];

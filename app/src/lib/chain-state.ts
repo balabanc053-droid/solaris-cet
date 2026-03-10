@@ -27,7 +27,7 @@ export interface ChainPoolState {
   /** LP token total supply — or null if unknown */
   lpSupply: string | null;
   /** Spot price in TON per CET — or null if unknown */
-  pricetonPerCet: string | null;
+  priceTonPerCet: string | null;
 }
 
 export interface ChainState {
