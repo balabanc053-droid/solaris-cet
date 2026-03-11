@@ -7,7 +7,7 @@ cet_contract = os.environ["CET_CONTRACT"]
 dedust_pool = os.environ["DEDUST_POOL"]
 timestamp = os.environ["TIMESTAMP"]
 
-CET_DECIMALS = 9
+DEFAULT_DECIMALS = 9
 
 with open("/tmp/jetton.json") as f:
     jetton = json.load(f)
@@ -23,6 +23,9 @@ meta = jetton.get("metadata", {})
 total_supply = jetton.get("total_supply")
 decimals_raw = meta.get("decimals")
 
+# Compute effective decimals once; reuse for both state output and reserve maths
+effective_decimals: int = int(decimals_raw) if decimals_raw is not None else DEFAULT_DECIMALS
+
 # ── USD prices from DeDust prices endpoint ────────────────────────────────────
 ton_price_usd = None
 cet_price_usd = None
@@ -33,14 +36,14 @@ for entry in (prices if isinstance(prices, list) else []):
     price_str = entry.get("price")
     if addr == "native" and price_str:
         try:
-            ton_price_usd = float(price_str) or None
+            ton_price_usd = float(price_str)
         except (ValueError, TypeError):
-            pass
+            ton_price_usd = None
     elif addr == cet_address_lower and price_str:
         try:
-            cet_price_usd = float(price_str) or None
+            cet_price_usd = float(price_str)
         except (ValueError, TypeError):
-            pass
+            cet_price_usd = None
 
 # ── Pool reserves from DeDust individual pool endpoint ───────────────────────
 # reserveLeft = TON reserve (nanoTON), reserveRight = CET reserve (nano-CET)
@@ -55,10 +58,15 @@ if reserve_left_str is not None:
         tvl_ton = None
 
 # Derive CET price from reserves if not available in the prices endpoint
-if cet_price_usd is None and reserve_left_str and reserve_right_str and ton_price_usd:
+if (
+    cet_price_usd is None
+    and reserve_left_str is not None
+    and reserve_right_str is not None
+    and ton_price_usd is not None
+):
     try:
         ton_reserve = float(reserve_left_str) / 1e9
-        cet_reserve = float(reserve_right_str) / 10 ** CET_DECIMALS
+        cet_reserve = float(reserve_right_str) / 10 ** effective_decimals
         if cet_reserve > 0:
             cet_price_usd = round(ton_reserve / cet_reserve * ton_price_usd, 6)
     except (ValueError, TypeError, ZeroDivisionError):
@@ -74,7 +82,7 @@ state = {
         "name": meta.get("name") or "SOLARIS CET",
         "contract": cet_contract,
         "totalSupply": total_supply if total_supply is not None else None,
-        "decimals": int(decimals_raw) if decimals_raw is not None else CET_DECIMALS,
+        "decimals": effective_decimals,
     },
     "pool": {
         "address": dedust_pool,

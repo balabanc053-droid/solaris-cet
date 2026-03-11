@@ -47,7 +47,7 @@ const INITIAL_STATE: PoolData = {
   lastUpdated: null,
 };
 
-export function useLivePoolData(): PoolData {
+export function useUsdPoolMetrics(): PoolData {
   const [data, setData] = useState<PoolData>(INITIAL_STATE);
 
   const fetchData = useCallback(async () => {

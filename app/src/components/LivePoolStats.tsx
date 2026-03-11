@@ -1,6 +1,6 @@
 import { Activity, RefreshCw, ExternalLink } from 'lucide-react';
 import { useLivePoolData } from '../hooks/useLivePoolData';
-import { useLivePoolData as useUsdPoolMetrics } from '../hooks/use-live-pool-data';
+import { useUsdPoolMetrics } from '../hooks/use-live-pool-data';
 
 const DEDUST_POOL_URL =
   'https://dedust.io/pools/EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB';
