@@ -190,7 +190,7 @@ function zScoreNormalise(values: number[]): number[] {
   if (values.length === 0) return [];
   const mean     = values.reduce((s, v) => s + v, 0) / values.length;
   const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length;
-  const std      = Math.sqrt(variance) || 1;
+  const std      = Math.sqrt(variance) || 1; // ||1 guards against all-identical inputs (variance=0)
   return values.map(v => Math.max(-1, Math.min(1, (v - mean) / std)));
 }
 

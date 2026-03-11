@@ -20,7 +20,9 @@ test.describe('AI Model Execution — Intelligence Core', () => {
     await page.goto('/');
     // Wait for loading overlay to hide; catch is intentional — the overlay may
     // already be gone if the browser context was reused across test runs.
-    await page.locator('.loading-overlay').waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
+    await page.locator('.loading-overlay').waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {
+      // Intentional: the overlay may already be hidden on context reuse across tests.
+    });
   });
 
   test('Intelligence Core section is present in the DOM', async ({ page }) => {
