@@ -15,7 +15,8 @@
  *     – zero-value transfer
  *     – threshold invariants
  *     – removed-owner signature invalidation
- *     – max-proposal cap
+ *     – open-proposal cap (MAX_PROPOSALS tracks live count, not lifetime total)
+ *     – execution-time guards for add/remove owner race conditions
  */
 
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
@@ -622,7 +623,44 @@ describe("Security & fuzzing", () => {
         });
     });
 
-    // ── 5c. Integer overflow in proposal count (fuzz) ────────────────────────
+    // ── 5c. Open-proposal cap tracks live count, not lifetime total ──────────
+    it("openProposalCount increments on create and decrements on execute", async () => {
+        const { blockchain, deployer, contract } = await deploy(1n);
+        await fund(contract, deployer, toNano("5"));
+
+        const recipient = await blockchain.treasury("recipient");
+
+        // Create 3 proposals
+        for (let i = 0; i < 3; i++) {
+            await contract.send(
+                deployer.getSender(),
+                { value: toNano("0.1") },
+                {
+                    $$type: "Propose",
+                    queryId: BigInt(i + 1),
+                    to: recipient.address,
+                    value: 0n,
+                    payload: null,
+                }
+            );
+        }
+
+        expect(await contract.getProposalCount()).toBe(3n);
+        expect(await contract.getOpenProposalCount()).toBe(3n);
+
+        // Execute proposal 0
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "Execute", queryId: 100n, proposalId: 0n }
+        );
+
+        // proposalCount (ID counter) stays at 3; openProposalCount decrements
+        expect(await contract.getProposalCount()).toBe(3n);
+        expect(await contract.getOpenProposalCount()).toBe(2n);
+    });
+
+    // ── 5d. Integer overflow in proposal count (fuzz) ────────────────────────
     it("fuzz: rapid proposals do not corrupt proposal count", async () => {
         const { blockchain, deployer, contract } = await deploy(1n);
 
@@ -991,6 +1029,106 @@ describe("Security & fuzzing", () => {
         });
     });
 
+    // ── 5j-2. Execution-time guard: add-owner race condition ─────────────────
+    it("execution-time: add-owner proposal rejected if target became owner between proposal and execution", async () => {
+        const { blockchain, deployer, contract } = await deploy(1n);
+
+        const newOwner = await blockchain.treasury("newOwner");
+
+        // Propose adding newOwner (proposal A)
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "ProposeAddOwner", queryId: 1n, newOwner: newOwner.address }
+        );
+        const proposalA = (await contract.getProposalCount()) - 1n;
+
+        // Propose adding newOwner again (proposal B – duplicate, will be rejected at propose time)
+        // Instead: directly execute A, so newOwner becomes owner
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "Execute", queryId: 2n, proposalId: proposalA }
+        );
+        expect(await contract.getIsOwner(newOwner.address)).toBe(true);
+
+        // Now create a second add-owner proposal for the same address (should fail at propose time)
+        const dupResult = await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "ProposeAddOwner", queryId: 3n, newOwner: newOwner.address }
+        );
+        expect(dupResult.transactions).toHaveTransaction({
+            to: contract.address,
+            success: false,
+        });
+    });
+
+    // ── 5j-3. Execution-time guard: remove-owner race condition ──────────────
+    it("execution-time: remove-owner proposal rejected if target was already removed", async () => {
+        const { blockchain, deployer, contract } = await deploy(1n);
+
+        const owner2 = await blockchain.treasury("owner2");
+        const owner3 = await blockchain.treasury("owner3");
+
+        // Add owner2 and owner3
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "ProposeAddOwner", queryId: 1n, newOwner: owner2.address }
+        );
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "Execute", queryId: 2n, proposalId: 0n }
+        );
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "ProposeAddOwner", queryId: 3n, newOwner: owner3.address }
+        );
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "Execute", queryId: 4n, proposalId: 1n }
+        );
+
+        // Propose removing owner2 (proposal C) — threshold=1, ownerCount=3
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "ProposeRemoveOwner", queryId: 5n, owner: owner2.address }
+        );
+        const removePropC = (await contract.getProposalCount()) - 1n;
+
+        // Propose removing owner2 again (proposal D)
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "ProposeRemoveOwner", queryId: 6n, owner: owner2.address }
+        );
+        const removePropD = (await contract.getProposalCount()) - 1n;
+
+        // Execute C → owner2 removed
+        await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "Execute", queryId: 7n, proposalId: removePropC }
+        );
+        expect(await contract.getIsOwner(owner2.address)).toBe(false);
+
+        // Execute D → should fail (owner2 is no longer an owner)
+        const failResult = await contract.send(
+            deployer.getSender(),
+            { value: toNano("0.1") },
+            { $$type: "Execute", queryId: 8n, proposalId: removePropD }
+        );
+        expect(failResult.transactions).toHaveTransaction({
+            to: contract.address,
+            success: false,
+        });
+    });
+
     // ── 5j. Revoke a signature that was never given ───────────────────────────
     it("fuzz: cannot revoke a signature not yet given", async () => {
         const { blockchain, deployer, contract } = await deploy(1n);
@@ -1115,5 +1253,11 @@ describe("Getter coverage", () => {
         const bal = await contract.getContractBalance();
         // Balance = deploy(1 TON) + fund(5 TON) minus gas; must be ≥ 4 TON
         expect(bal).toBeGreaterThan(toNano("4"));
+    });
+
+    it("openProposalCount starts at 0 and is a separate field from proposalCount", async () => {
+        const { deployer, contract } = await deploy(1n);
+        expect(await contract.getOpenProposalCount()).toBe(0n);
+        expect(await contract.getProposalCount()).toBe(0n);
     });
 });

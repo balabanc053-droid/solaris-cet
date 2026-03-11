@@ -20,11 +20,31 @@ decimals_raw = meta.get("decimals")
 tvl_ton = pool.get("totalSupply")
 price_usd = pool.get("price")
 
-# Pool reserves: reserves[0] = TON (nanoTON), reserves[1] = CET (nano-CET)
-reserves = pool.get("reserves", [])
-reserve_left = reserves[0] if len(reserves) > 0 else None   # TON reserve (nanoTON)
-reserve_right = reserves[1] if len(reserves) > 1 else None  # CET reserve (nano-CET)
+# ── Validate reserves shape before building state ──────────────────────────────
+
+reserves = pool.get("reserves")
+if not isinstance(reserves, list) or len(reserves) < 2:
+    print(
+        f"ERROR: pool.reserves must be a list with at least 2 entries; "
+        f"got: {reserves!r}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+reserve_left = reserves[0]   # TON reserve (nanoTON)
+reserve_right = reserves[1]  # CET reserve (nano-CET)
+
+if reserve_left is None or reserve_right is None:
+    print(
+        f"ERROR: pool reserves contain null values; "
+        f"reserves[0]={reserve_left!r}, reserves[1]={reserve_right!r}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
 lp_supply = pool.get("lpSupply")
+
+# ── Build state dict ───────────────────────────────────────────────────────────
 
 state = {
     "token": {
@@ -45,12 +65,7 @@ state = {
     "updatedAt": timestamp,
 }
 
-with open("app/public/api/state.json", "w") as f:
-    json.dump(state, f, indent=2)
-
-print("state.json written successfully")
-
-# ── Schema validation ──────────────────────────────────────────────────────────
+# ── Schema validation (before writing) ────────────────────────────────────────
 
 REQUIRED_TOP = {"token", "pool", "updatedAt"}
 REQUIRED_TOKEN = {"symbol", "name", "contract", "totalSupply", "decimals"}
@@ -75,10 +90,22 @@ if not isinstance(token.get("decimals"), int):
 if not isinstance(pool_data.get("address"), str):
     errors.append("pool.address must be a string")
 
+# Ensure critical pool fields are non-null
+for field in ("reserveLeft", "reserveRight", "tvlTon", "priceUsd", "lpSupply"):
+    if pool_data.get(field) is None:
+        errors.append(f"pool.{field} must not be null")
+
 if errors:
     for e in errors:
         print(f"SCHEMA ERROR: {e}", file=sys.stderr)
     sys.exit(1)
 
 print("Schema validation passed ✓")
+
+# ── Write to disk only after all validations pass ─────────────────────────────
+
+with open("app/public/api/state.json", "w") as f:
+    json.dump(state, f, indent=2)
+
+print("state.json written successfully")
 

@@ -68,7 +68,13 @@ jobs:
           check ".token.name"
           check ".token.contract"
           check ".token.decimals"
+          check ".token.totalSupply"
           check ".pool.address"
+          check ".pool.reserveLeft"
+          check ".pool.reserveRight"
+          check ".pool.lpSupply"
+          check ".pool.tvlTon"
+          check ".pool.priceUsd"
           check ".updatedAt"
 
           echo "✓ state.json schema validation passed"

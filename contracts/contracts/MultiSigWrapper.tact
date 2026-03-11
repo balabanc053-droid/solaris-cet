@@ -104,8 +104,11 @@ contract MultiSigWrapper with Deployable {
     threshold: Int as uint8;
 
     // ── Proposals ────────────────────────────────────────────────────────────
-    proposals:     map<Int, Proposal>;
-    proposalCount: Int as uint64;
+    proposals:          map<Int, Proposal>;
+    /// Monotonically-increasing ID counter; never decremented
+    proposalCount:      Int as uint64;
+    /// Number of proposals that are currently open (not yet executed); enforces MAX_PROPOSALS cap
+    openProposalCount:  Int as uint64;
 
     // ── Re-entrancy guard ────────────────────────────────────────────────────
     locked: Bool;
@@ -123,7 +126,8 @@ contract MultiSigWrapper with Deployable {
         self.nextOwnerSlot = 1;
         self.threshold     = threshold;
         self.ownerBitmap   = 1; // bit 0 set for slot 1
-        self.proposalCount = 0;
+        self.proposalCount     = 0;
+        self.openProposalCount = 0;
         self.locked        = false;
 
         self.ownerIndex.set(owner, 1);
@@ -146,7 +150,7 @@ contract MultiSigWrapper with Deployable {
 
         require(msg.value >= 0,                                    "Value must be non-negative");
         require(msg.value <= myBalance() - MIN_RESERVE,            "Insufficient contract balance");
-        require(self.proposalCount < MAX_PROPOSALS,                "Too many open proposals");
+        require(self.openProposalCount < MAX_PROPOSALS,            "Too many open proposals");
 
         let bitmap: Int = self.setBit(0, ownerIdx);
 
@@ -163,7 +167,8 @@ contract MultiSigWrapper with Deployable {
         };
 
         self.proposals.set(self.proposalCount, p);
-        self.proposalCount = self.proposalCount + 1;
+        self.proposalCount     = self.proposalCount + 1;
+        self.openProposalCount = self.openProposalCount + 1;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -203,8 +208,9 @@ contract MultiSigWrapper with Deployable {
 
         // ── Check–Effects–Interactions ───────────────────────────────────────
         // Effects first (before any external interaction)
-        self.locked   = true;
-        p.executed    = true;
+        self.locked            = true;
+        p.executed             = true;
+        self.openProposalCount = self.openProposalCount - 1;
         self.proposals.set(msg.proposalId, p);
 
         // Interactions
@@ -217,8 +223,16 @@ contract MultiSigWrapper with Deployable {
                 body:  p.payload,
             });
         } else if (p.kind == KIND_ADD_OWNER) {
+            // Re-validate at execution time: state may have changed since proposal
+            require(self.ownerIndex.get(p.to) == null, "Already an owner at execution time");
+            require(self.ownerCount < MAX_OWNERS,      "Max owners reached at execution time");
+            require(self.nextOwnerSlot < MAX_OWNERS,   "No free owner slots at execution time");
             self.internalAddOwner(p.to);
         } else if (p.kind == KIND_REMOVE_OWNER) {
+            // Re-validate at execution time: target must still exist and invariants must hold
+            require(self.ownerIndex.get(p.to) != null,        "Not an owner at execution time");
+            require(self.ownerCount - 1 >= 1,                 "Cannot remove last owner");
+            require(self.ownerCount - 1 >= self.threshold,    "Cannot remove owner: would break threshold");
             self.internalRemoveOwner(p.to);
         } else if (p.kind == KIND_UPDATE_THRESHOLD) {
             let t: Int = p.value;
@@ -259,7 +273,7 @@ contract MultiSigWrapper with Deployable {
         require(self.ownerCount < MAX_OWNERS,               "Max owners reached");
         require(self.nextOwnerSlot < MAX_OWNERS,            "No free owner slots");
         require(self.ownerIndex.get(msg.newOwner) == null,  "Already an owner");
-        require(self.proposalCount < MAX_PROPOSALS,         "Too many open proposals");
+        require(self.openProposalCount < MAX_PROPOSALS,     "Too many open proposals");
 
         let bitmap: Int = self.setBit(0, ownerIdx);
 
@@ -276,7 +290,8 @@ contract MultiSigWrapper with Deployable {
         };
 
         self.proposals.set(self.proposalCount, p);
-        self.proposalCount = self.proposalCount + 1;
+        self.proposalCount     = self.proposalCount + 1;
+        self.openProposalCount = self.openProposalCount + 1;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -289,7 +304,7 @@ contract MultiSigWrapper with Deployable {
 
         require(self.ownerIndex.get(msg.owner) != null, "Not an owner");
         require(self.ownerCount > self.threshold,       "Cannot remove: would break threshold");
-        require(self.proposalCount < MAX_PROPOSALS,     "Too many open proposals");
+        require(self.openProposalCount < MAX_PROPOSALS, "Too many open proposals");
 
         let bitmap: Int = self.setBit(0, ownerIdx);
 
@@ -306,7 +321,8 @@ contract MultiSigWrapper with Deployable {
         };
 
         self.proposals.set(self.proposalCount, p);
-        self.proposalCount = self.proposalCount + 1;
+        self.proposalCount     = self.proposalCount + 1;
+        self.openProposalCount = self.openProposalCount + 1;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -319,7 +335,7 @@ contract MultiSigWrapper with Deployable {
 
         require(msg.newThreshold >= 1,               "Threshold must be >= 1");
         require(msg.newThreshold <= self.ownerCount, "Threshold exceeds owner count");
-        require(self.proposalCount < MAX_PROPOSALS,  "Too many open proposals");
+        require(self.openProposalCount < MAX_PROPOSALS,  "Too many open proposals");
 
         let bitmap: Int = self.setBit(0, ownerIdx);
 
@@ -336,7 +352,8 @@ contract MultiSigWrapper with Deployable {
         };
 
         self.proposals.set(self.proposalCount, p);
-        self.proposalCount = self.proposalCount + 1;
+        self.proposalCount     = self.proposalCount + 1;
+        self.openProposalCount = self.openProposalCount + 1;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -397,20 +414,19 @@ contract MultiSigWrapper with Deployable {
         self.ownerByIndex.del(idx);
         self.ownerIndex.del(owner);
         self.ownerCount = self.ownerCount - 1;
-        // Adjust threshold if it now exceeds the owner count
-        if (self.threshold > self.ownerCount) {
-            self.threshold = self.ownerCount;
-        }
+        // Threshold invariant is enforced by execution-time require in the Execute handler;
+        // no silent adjustment here.
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Getters
     // ─────────────────────────────────────────────────────────────────────────
 
-    get fun ownerCount(): Int       { return self.ownerCount; }
-    get fun threshold(): Int        { return self.threshold; }
-    get fun proposalCount(): Int    { return self.proposalCount; }
-    get fun contractBalance(): Int  { return myBalance(); }
+    get fun ownerCount(): Int           { return self.ownerCount; }
+    get fun threshold(): Int            { return self.threshold; }
+    get fun proposalCount(): Int        { return self.proposalCount; }
+    get fun openProposalCount(): Int    { return self.openProposalCount; }
+    get fun contractBalance(): Int      { return myBalance(); }
 
     get fun isOwner(addr: Address): Bool {
         return self.ownerIndex.get(addr) != null;

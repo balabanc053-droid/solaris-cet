@@ -9,17 +9,34 @@ import { NetworkProvider } from "@ton/blueprint";
  *   npx blueprint run deployMultiSigWrapper --network testnet
  *
  * Environment variables:
- *   OWNER   – deployer address used as the initial single owner (defaults to
- *             the wallet connected via the network provider).
+ *   OWNER   – override the initial single owner address (must be a valid TON address string).
+ *             Defaults to the wallet address connected via the network provider.
  */
 export async function run(provider: NetworkProvider) {
     const sender = provider.sender();
 
-    if (!sender.address) {
-        throw new Error("Sender address is not available. Please connect a wallet.");
+    let owner: Address;
+
+    const envOwner = process.env.OWNER;
+    if (envOwner && envOwner.trim().length > 0) {
+        try {
+            owner = Address.parse(envOwner.trim());
+        } catch {
+            throw new Error(
+                `Invalid OWNER environment variable value "${envOwner}". ` +
+                "Please provide a valid TON address (e.g. EQ...)."
+            );
+        }
+    } else {
+        if (!sender.address) {
+            throw new Error(
+                "Sender address is not available. " +
+                "Please connect a wallet or set the OWNER environment variable."
+            );
+        }
+        owner = sender.address;
     }
 
-    const owner: Address = sender.address;
     const threshold = 1n; // start with 1-of-1; add owners and raise threshold afterwards
 
     console.log(`Deploying MultiSigWrapper with owner: ${owner.toString()}`);
