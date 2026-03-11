@@ -1,44 +1,93 @@
-# Solaris CET
+# SOLARIS CET
 
 [![Deploy to GitHub Pages](https://github.com/aamclaudiu-hash/solaris-cet/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/aamclaudiu-hash/solaris-cet/actions/workflows/deploy-pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-**Solaris CET** is a decentralized token project built on the TON blockchain. This repository contains the official landing page — a high-performance static web application built with **React 19**, **TypeScript**, **Vite**, **Tailwind CSS**, and **GSAP** animations, deployed automatically via **GitHub Actions** to **GitHub Pages**.
+> **Hyper-scarce token (9,000 CET) powering rural agricultural innovation in Puiești — built on a Zero-Cost Edge-Web3 architecture with React 19, ONNX AI, TON Multi-Sig, and GitHub Actions.**
 
 ---
 
-## 🚀 One-Click Deploy (Fork & Host Your Own Instance)
+## 🌾 Project Vision
 
-You can spin up your own hosted instance of Solaris CET in under 2 minutes — no server, no paid hosting, no configuration required.
+**SOLARIS CET** is more than a token — it is the financial and computational backbone of a precision-farming platform serving **Puiești**, a rural agricultural community in Romania.
 
-### Step 1 — Fork this repository
+The CET token is fixed at a maximum supply of **9,000 units**, making it one of the most hyper-scarce assets on the TON blockchain. This extreme scarcity is intentional: it aligns long-term incentives between landowners, agronomists, and technology contributors who collectively govern the protocol.
 
-Click the **Fork** button at the top-right of this page:
+The platform delivers **ONNX-powered edge AI** inference (yield prediction, soil analytics, crop optimization) directly in the user's browser — with no cloud GPU servers, no subscription fees, and no single point of failure. All computation runs locally via Web Workers; all on-chain data is served from a GitHub Pages CDN snapshot updated by GitHub Actions.
 
-> **[https://github.com/aamclaudiu-hash/solaris-cet/fork](https://github.com/aamclaudiu-hash/solaris-cet/fork)**
+This architecture proves that **rural communities do not need centralized infrastructure** to access world-class agricultural intelligence and decentralized finance.
 
-### Step 2 — Enable GitHub Pages in your fork
+---
 
-1. Open your forked repository on GitHub.
-2. Go to **Settings** → **Pages**.
-3. Under **Build and deployment** → **Source**, select **GitHub Actions**.
-4. Click **Save**.
+## ⚙️ Tech Stack
 
-### Step 3 — Trigger the deployment
+| Layer | Technology | Version |
+|---|---|---|
+| UI Framework | [React](https://react.dev/) | 19 |
+| Language | [TypeScript](https://www.typescriptlang.org/) | 5 |
+| Bundler / Dev Server | [Vite](https://vite.dev/) | 7 |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) | 3 |
+| Animations | [GSAP](https://gsap.com/) | 3 |
+| Edge AI Runtime | [ONNX Runtime Web](https://onnxruntime.ai/docs/get-started/with-javascript/web.html) | 1.24 |
+| Smart Contracts | [Tact](https://tact-lang.org/) (TON) | — |
+| Blockchain | [TON Network](https://ton.org/) | — |
+| Wallet Integration | [TON Connect 2](https://docs.ton.org/develop/dapps/ton-connect/overview) | — |
+| PWA / Service Worker | [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (Workbox) | — |
+| Compression | [vite-plugin-compression2](https://github.com/nonzzz/vite-plugin-compression) (Brotli) | — |
+| Hosting | [GitHub Pages](https://pages.github.com/) | — |
+| CI/CD | [GitHub Actions](https://github.com/features/actions) | — |
 
-The site is built and deployed automatically on every `git push` to the `main` branch.
-To trigger an immediate deployment without pushing code:
+---
 
-1. Go to **Actions** → **Deploy Solaris CET to GitHub Pages**.
-2. Click **Run workflow** → **Run workflow**.
+## 🚀 Quick Start — Local Development
 
-### Step 4 — Access your live site
+**All commands must be run from the `app/` subdirectory.**
 
-After the workflow completes (≈ 2 minutes), your site will be live at:
+### Prerequisites
 
+- **Node.js** ≥ 20 ([download](https://nodejs.org/))
+- **npm** ≥ 10 (bundled with Node.js)
+
+### Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/aamclaudiu-hash/solaris-cet.git
+cd solaris-cet/app
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the development server
+npm run dev
+# → http://localhost:5173
 ```
-https://<your-github-username>.github.io/solaris-cet/
+
+### Available Commands
+
+```bash
+# Development server with hot module replacement
+npm run dev
+
+# Production build → app/dist/
+npm run build
+
+# Preview the production build locally
+npm run preview
+
+# Lint with ESLint
+npm run lint
+
+# TypeScript type-check (no output)
+npx tsc --noEmit
 ```
+
+### One-Click Deploy (Fork & Host Your Own Instance)
+
+1. **Fork** this repository: [https://github.com/aamclaudiu-hash/solaris-cet/fork](https://github.com/aamclaudiu-hash/solaris-cet/fork)
+2. In your fork, go to **Settings → Pages → Source** and select **GitHub Actions**.
+3. Push any commit to `main` — the site deploys automatically in ≈ 2 minutes.
+4. Access your instance at `https://<your-username>.github.io/solaris-cet/`
 
 ---
 
@@ -49,99 +98,60 @@ solaris-cet/
 ├── .github/
 │   ├── workflows/
 │   │   └── deploy-pages.yml   # CI/CD: build + deploy to GitHub Pages
-│   └── PULL_REQUEST_TEMPLATE.md
-├── app/                       # React + TypeScript + Vite source
+│   ├── scripts/
+│   │   └── update_state.py    # DeDust RPC → api/state.json snapshot
+│   └── ISSUE_TEMPLATE/        # Bug report & feature request forms
+├── app/                       # All source code
 │   ├── src/
 │   │   ├── sections/          # Page sections (Hero, Tokenomics, etc.)
 │   │   ├── components/        # Reusable UI components
-│   │   │   ├── ui/            # shadcn/ui primitives
-│   │   │   ├── AnimatedCounter.tsx  # GSAP counter triggered by IntersectionObserver
-│   │   │   ├── CursorGlow.tsx       # Mouse-following radial-gradient spotlight
-│   │   │   ├── GlowOrbs.tsx         # Ambient animated glow blobs (gold / cyan / mixed)
-│   │   │   ├── Navigation.tsx       # Fixed nav with scroll-progress bar
-│   │   │   └── ParticleCanvas.tsx   # Interactive particle field (canvas)
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── public/                # Static assets
+│   │   │   └── ui/            # shadcn/ui primitives
+│   │   ├── hooks/             # Custom React hooks (pool data, language, etc.)
+│   │   ├── lib/               # Utilities and chain state types
+│   │   ├── App.tsx            # Root component; GSAP plugin registration
+│   │   └── main.tsx           # Entry point
+│   ├── public/
+│   │   └── api/state.json     # Static on-chain data snapshot (updated by CI)
 │   ├── index.html
-│   ├── vite.config.ts
+│   ├── vite.config.ts         # Vite + PWA + Brotli config
 │   ├── tailwind.config.js
 │   └── package.json
-├── README.md
+├── contracts/
+│   └── MultisigWrapper.tact   # TON Multi-Sig smart contract (Tact)
+├── ARCHITECTURE.md            # Detailed system architecture documentation
 ├── CONTRIBUTING.md
 └── LICENSE
 ```
 
 ---
 
-## ✨ UI Features
+## 🌐 Zero-Cost Infrastructure Philosophy
 
-| Feature | Description |
-|---------|-------------|
-| **CursorGlow** | Fixed radial-gradient spotlight that follows the cursor with lerp(0.1) smoothing. Hidden on touch/mobile. |
-| **GlowOrbs** | Ambient animated blobs per section (`gold \| cyan \| mixed` variants, `animate-orb-pulse` keyframe). |
-| **AnimatedCounter** | GSAP counter from 0 → target, triggered by IntersectionObserver; supports prefix, suffix, and decimal places. |
-| **Scroll progress bar** | Gold→cyan→gold gradient line in the navigation bar that fills as you scroll. |
-| **Loading screen** | 1.8 s overlay with animated logo + progress bar, fades out with GSAP (`LOADING_DURATION_MS = 1800`). |
-| **Hero parallax** | 3-D mouse-driven parallax on the coin and stat cards (`rotateX`/`rotateY` + lerp). |
-| **HybridEngine nodes** | Click-to-expand PoW/DPoS node cards; animated SVG path (`strokeDashoffset` loop). |
-| **Tokenomics ring** | GSAP-animated radial SVG ring showing mined supply (0 % → current %). |
-| **Footer** | Real social links (Twitter, Discord, Telegram, GitHub, DeDust), copy-to-clipboard pool address, IPFS whitepaper link, live-status indicator. |
+SOLARIS CET is designed around a single constraint: **every layer must cost $0/month to operate.**
 
----
+This is not a compromise — it is the architecture. By combining free-tier managed services with edge computation, the platform achieves production-grade reliability and global availability without any recurring infrastructure spend:
 
-## 🛠️ Local Development
+| Layer | Approach | Cost |
+|---|---|---|
+| **Data** | GitHub Actions cron pre-fetches DeDust RPC → static `api/state.json` | **$0** |
+| **Delivery** | GitHub Pages CDN + Brotli compression + PWA offline cache | **$0** |
+| **Compute** | ONNX Runtime Web Worker runs AI inference on the user's device | **$0** |
+| **Security** | TON Tact Multi-Sig contract — no centralized key custodian | **Gas only** |
 
-### Prerequisites
+This philosophy makes the platform **fork-able, self-hostable, and censorship-resistant** — anyone can run their own full instance by forking this repository and enabling GitHub Pages.
 
-- **Node.js** ≥ 20 ([download](https://nodejs.org/))
-- **npm** ≥ 10 (bundled with Node.js)
-
-### Setup
-
-```bash
-# 1. Clone the repository (or your fork)
-git clone https://github.com/aamclaudiu-hash/solaris-cet.git
-cd solaris-cet/app
-
-# 2. Install dependencies
-npm install
-
-# 3. Start the development server
-npm run dev
-# → Available at http://localhost:5173
-```
-
-### Build for production
-
-```bash
-cd app
-npm run build
-# Output is generated in app/dist/
-```
-
-### Preview production build locally
-
-```bash
-cd app
-npm run preview
-```
+For a deep-dive into each layer, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
-## ⚙️ Tech Stack
+## 🔗 On-Chain References
 
-| Layer         | Technology                                      |
-|---------------|-------------------------------------------------|
-| UI Framework  | [React 19](https://react.dev/)                  |
-| Language      | [TypeScript 5](https://www.typescriptlang.org/) |
-| Bundler       | [Vite 7](https://vite.dev/)                     |
-| Styling       | [Tailwind CSS 3](https://tailwindcss.com/)      |
-| Components    | [shadcn/ui](https://ui.shadcn.com/)             |
-| Animations    | [GSAP 3](https://gsap.com/)                     |
-| Blockchain    | [TON Network](https://ton.org/)                 |
-| Hosting       | [GitHub Pages](https://pages.github.com/)       |
-| CI/CD         | [GitHub Actions](https://github.com/features/actions) |
+| Resource | Value |
+|---|---|
+| Token supply | 9,000 CET (fixed) |
+| Blockchain | TON Mainnet |
+| DeDust pool | [`EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB`](https://dedust.io/pools/EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB) |
+| Whitepaper (IPFS) | [`bafkreieggm2l7favvjw4amybbobastjo6kcrdi33gzcvtzrur5opoivd3a`](https://ipfs.io/ipfs/bafkreieggm2l7favvjw4amybbobastjo6kcrdi33gzcvtzrur5opoivd3a) |
 
 ---
 
