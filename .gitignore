@@ -78,6 +78,9 @@ npm-debug.log*
 /vendor/
 /src/
 
+# Track project documentation
+!docs/
+
 # Miscellaneous files that do not belong at root
 /components.json
 /fix-project.sh
