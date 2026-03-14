@@ -10,10 +10,10 @@
 module.exports = {
   ci: {
     collect: {
-      /* Serve the production dist/ folder */
+      /* Serve the production dist/ folder via LHCI's built-in static server.
+         No explicit `url` — LHCI auto-discovers index.html from staticDistDir
+         and constructs the correct localhost URL for whichever port it binds. */
       staticDistDir: './dist',
-      /* Only audit the main entry point — extra HTML files in dist are not part of the app */
-      url: ['http://localhost/index.html'],
       numberOfRuns: 3,
       settings: {
         /* Use desktop preset for a consistent, deterministic baseline */
@@ -22,6 +22,9 @@ module.exports = {
         throttlingMethod: 'provided',
         /* Only audit the categories we care about */
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+        /* Required in GitHub Actions (container) — Chrome refuses to start
+           without --no-sandbox in a non-privileged Linux environment. */
+        chromeFlags: '--no-sandbox --headless --disable-gpu',
       },
     },
     assert: {
