@@ -62,9 +62,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('app/package-lock.json') }}
+          key: vite-cache-${{ runner.os }}-${{ hashFiles('app/package-lock.json', 'app/vite.config.ts') }}
           restore-keys: |
-            vite-${{ runner.os }}-
+            vite-cache-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: app

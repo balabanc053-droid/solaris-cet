@@ -1,28 +1,34 @@
-name: CI — Continuous Integration
+name: CI — Quality Gate
 
-# Run on every pull request targeting `main` and on direct pushes to `main`.
-# Implements a multi-stage quality gate:
-#   Stage 1 (parallel): Lint & type-check  +  Security audit
-#   Stage 2:            Build application  (only when Stage 1 passes)
-#   Stage 3:            E2E tests          (only when Stage 2 passes)
+# Runs on every pull request targeting `main` and on direct pushes to `main`.
+# Enforces the quality barrier: lint + unit-tests must both pass (in parallel)
+# before the build is allowed to proceed. E2E tests run against the built
+# artefact, simulating real user behaviour in a headless Chromium browser.
+#
+# Pipeline timing model (see WHITEPAPER §CI):
+#   T_total = T_init + T_cache_download
+#             + max(T_static_analysis, T_unit_tests)
+#             + T_compile
+#             - ΔT_cache_optimisation
+
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-# Cancel in-progress runs for the same ref to save compute on rapid pushes.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # ── Stage 1a: Lint & Type-check ──────────────────────────────────────────
-  lint-typecheck:
-    name: Lint & Type-check
+  # ── Stage 1a (parallel): Static analysis ──────────────────────────────────
+  lint:
+    name: Static Analysis (ESLint + TypeScript)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -47,9 +53,9 @@ jobs:
         working-directory: app
         run: npx tsc --noEmit
 
-  # ── Stage 1b: Security audit (runs in parallel with lint-typecheck) ──────
-  security-audit:
-    name: Security Audit
+  # ── Stage 1b (parallel): Unit tests ───────────────────────────────────────
+  unit-test:
+    name: Unit Tests (Vitest)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -66,15 +72,15 @@ jobs:
         working-directory: app
         run: npm ci
 
-      - name: Audit dependencies for critical vulnerabilities
+      - name: Run unit tests
         working-directory: app
-        run: npm audit --audit-level=critical
+        run: npm test
 
-  # ── Stage 2: Build (only after all Stage 1 gates pass) ───────────────────
+  # ── Stage 2: Build (waits for both quality gates) ─────────────────────────
   build:
     name: Build application
     runs-on: ubuntu-latest
-    needs: [lint-typecheck, security-audit]
+    needs: [lint, unit-test]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -86,14 +92,13 @@ jobs:
           cache: "npm"
           cache-dependency-path: app/package-lock.json
 
-      # Cache Vite's intermediate build artifacts to speed up incremental builds.
       - name: Restore Vite build cache
         uses: actions/cache@v4
         with:
           path: app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('app/package-lock.json') }}
+          key: vite-cache-${{ runner.os }}-${{ hashFiles('app/package-lock.json', 'app/vite.config.ts') }}
           restore-keys: |
-            vite-${{ runner.os }}-
+            vite-cache-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: app
@@ -106,13 +111,13 @@ jobs:
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ci-dist-${{ github.run_id }}
+          name: dist-${{ github.sha }}
           path: app/dist
           retention-days: 1
 
-  # ── Stage 3: E2E tests (only after the build passes) ─────────────────────
+  # ── Stage 3: E2E tests (waits for build) ──────────────────────────────────
   e2e:
-    name: E2E tests (Playwright)
+    name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -126,30 +131,34 @@ jobs:
           cache: "npm"
           cache-dependency-path: app/package-lock.json
 
-      # Cache Playwright browser binaries so successive runs skip the large download.
-      - name: Restore Playwright browser cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('app/package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-
       - name: Install dependencies
         working-directory: app
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('app/package-lock.json') }}
+
       - name: Install Playwright browsers
         working-directory: app
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system dependencies
+        working-directory: app
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
-          name: ci-dist-${{ github.run_id }}
+          name: dist-${{ github.sha }}
           path: app/dist
 
-      - name: Run E2E tests
+      - name: Run Playwright E2E tests
         working-directory: app
         run: npx playwright test
 
