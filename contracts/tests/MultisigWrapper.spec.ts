@@ -10,260 +10,215 @@
  */
 
 import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
-import { Address, Cell, beginCell, toNano } from '@ton/core';
-import { MultiSigWrapper as MultisigWrapper } from '../wrappers/MultiSigWrapper';
+import { toNano } from '@ton/core';
+import { MultiSigWrapper } from '../wrappers/MultiSigWrapper';
 import '@ton/test-utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const PROPOSE_OP   = 0x1001;
-const CONFIRM_OP   = 0x1002;
-const REVOKE_OP    = 0x1003;
-
-function buildProposeMsg(destination: Address, value: bigint, payload?: Cell): Cell {
-  const b = beginCell()
-    .storeUint(PROPOSE_OP, 32)
-    .storeAddress(destination)
-    .storeUint(value, 128);
-  if (payload) {
-    b.storeBit(true).storeRef(payload);
-  } else {
-    b.storeBit(false);
-  }
-  return b.endCell();
-}
-
-function buildConfirmMsg(proposalId: bigint): Cell {
-  return beginCell()
-    .storeUint(CONFIRM_OP, 32)
-    .storeUint(proposalId, 64)
-    .endCell();
-}
-
-function buildRevokeMsg(proposalId: bigint): Cell {
-  return beginCell()
-    .storeUint(REVOKE_OP, 32)
-    .storeUint(proposalId, 64)
-    .endCell();
+/** Send a message through the contract's typed send method. */
+async function sendMsg(
+    multisig: SandboxContract<MultiSigWrapper>,
+    from: SandboxContract<TreasuryContract>,
+    msg: Parameters<MultiSigWrapper['send']>[3],
+    value = toNano('0.1'),
+) {
+    return multisig.send(from.getSender(), { value }, msg);
 }
 
 // ── Test suite ────────────────────────────────────────────────────────────────
 
-describe('MultisigWrapper — 2-of-3 threshold', () => {
-  let blockchain: Blockchain;
-  let signer0: SandboxContract<TreasuryContract>;
-  let signer1: SandboxContract<TreasuryContract>;
-  let signer2: SandboxContract<TreasuryContract>;
-  let nonSigner: SandboxContract<TreasuryContract>;
-  let multisig: SandboxContract<MultisigWrapper>;
-  let recipient: SandboxContract<TreasuryContract>;
+describe('MultiSigWrapper — 2-of-3 threshold', () => {
+    let blockchain: Blockchain;
+    let signer0: SandboxContract<TreasuryContract>;
+    let signer1: SandboxContract<TreasuryContract>;
+    let signer2: SandboxContract<TreasuryContract>;
+    let nonSigner: SandboxContract<TreasuryContract>;
+    let recipient: SandboxContract<TreasuryContract>;
+    let multisig: SandboxContract<MultiSigWrapper>;
 
-  beforeEach(async () => {
-    blockchain = await Blockchain.create();
+    beforeEach(async () => {
+        blockchain = await Blockchain.create();
 
-    signer0   = await blockchain.treasury('signer0');
-    signer1   = await blockchain.treasury('signer1');
-    signer2   = await blockchain.treasury('signer2');
-    nonSigner = await blockchain.treasury('nonSigner');
-    recipient = await blockchain.treasury('recipient');
+        signer0   = await blockchain.treasury('signer0');
+        signer1   = await blockchain.treasury('signer1');
+        signer2   = await blockchain.treasury('signer2');
+        nonSigner = await blockchain.treasury('nonSigner');
+        recipient = await blockchain.treasury('recipient');
 
-    multisig = blockchain.openContract(
-      await MultisigWrapper.fromInit(
-        signer0.address,
-        signer1.address,
-        signer2.address,
-      )
-    );
+        // Deploy with signer0 as initial owner, threshold=1 so governance
+        // proposals can be created and executed by signer0 alone.
+        multisig = blockchain.openContract(
+            await MultiSigWrapper.fromInit(signer0.address, 1n)
+        );
+        await signer0.send({
+            to: multisig.address,
+            value: toNano('10'),
+            init: multisig.init,
+        });
 
-    // Deploy with initial TON balance for forwarding
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('10'),
-      init: multisig.init,
-    });
-  });
+        // Add signer1 (proposes + executes with current 1-of-1 threshold)
+        await sendMsg(multisig, signer0, { $$type: 'ProposeAddOwner', queryId: 0n, newOwner: signer1.address });
+        await sendMsg(multisig, signer0, { $$type: 'Execute', queryId: 0n, proposalId: 0n });
 
-  // ── 1. Deployment ────────────────────────────────────────────────────────
+        // Add signer2
+        await sendMsg(multisig, signer0, { $$type: 'ProposeAddOwner', queryId: 0n, newOwner: signer2.address });
+        await sendMsg(multisig, signer0, { $$type: 'Execute', queryId: 0n, proposalId: 1n });
 
-  it('deploys correctly with three signers', async () => {
-    const signers = await multisig.getSigners();
-    expect(signers.get(0n)?.toString()).toBe(signer0.address.toString());
-    expect(signers.get(1n)?.toString()).toBe(signer1.address.toString());
-    expect(signers.get(2n)?.toString()).toBe(signer2.address.toString());
-  });
-
-  // ── 2. Proposal creation ─────────────────────────────────────────────────
-
-  it('allows a signer to create a proposal', async () => {
-    const result = await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('1')),
+        // Raise threshold to 2 (2-of-3)
+        await sendMsg(multisig, signer0, { $$type: 'ProposeUpdateThreshold', queryId: 0n, newThreshold: 2n });
+        await sendMsg(multisig, signer0, { $$type: 'Execute', queryId: 0n, proposalId: 2n });
     });
 
-    expect(result.transactions).toHaveTransaction({
-      from: signer0.address,
-      to: multisig.address,
-      success: true,
+    // ── 1. Deployment ────────────────────────────────────────────────────────
+
+    it('deploys with three owners at 2-of-3 threshold', async () => {
+        expect(await multisig.getOwnerCount()).toBe(3n);
+        expect(await multisig.getThreshold()).toBe(2n);
+        expect(await multisig.getIsOwner(signer0.address)).toBe(true);
+        expect(await multisig.getIsOwner(signer1.address)).toBe(true);
+        expect(await multisig.getIsOwner(signer2.address)).toBe(true);
+        expect(await multisig.getIsOwner(nonSigner.address)).toBe(false);
     });
 
-    const proposal = await multisig.getProposal(0n);
-    expect(proposal).not.toBeNull();
-    expect(proposal!.executed).toBe(false);
-    expect(proposal!.revoked).toBe(false);
-    // Proposer (signer0, index 0) automatically confirms → bit 0 set → mask = 1
-    expect(proposal!.confirmations).toBe(1);
-  });
+    // ── 2. Proposal creation ─────────────────────────────────────────────────
 
-  it('rejects proposal from non-signer', async () => {
-    const result = await nonSigner.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('1')),
+    it('allows a signer to create a transfer proposal', async () => {
+        const idBefore = await multisig.getNextProposalId();
+        const result = await sendMsg(multisig, signer0,
+            { $$type: 'Propose', queryId: 0n, to: recipient.address, value: toNano('1'), payload: null });
+
+        expect(result.transactions).toHaveTransaction({
+            from: signer0.address,
+            to: multisig.address,
+            success: true,
+        });
+        expect(await multisig.getNextProposalId()).toBe(idBefore + 1n);
     });
 
-    expect(result.transactions).toHaveTransaction({
-      from: nonSigner.address,
-      to: multisig.address,
-      success: false,
-    });
-  });
+    it('rejects a proposal from a non-signer', async () => {
+        const result = await sendMsg(multisig, nonSigner,
+            { $$type: 'Propose', queryId: 0n, to: recipient.address, value: toNano('1'), payload: null });
 
-  // ── 3. Confirmation & execution ──────────────────────────────────────────
-
-  it('executes transfer when second signer confirms (2-of-3)', async () => {
-    const sendValue = toNano('1');
-
-    // Step 1 — signer0 proposes
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, sendValue),
+        expect(result.transactions).toHaveTransaction({
+            from: nonSigner.address,
+            to: multisig.address,
+            success: false,
+        });
     });
 
-    const recipientBefore = await recipient.getBalance();
+    // ── 3. Sign & Execute ────────────────────────────────────────────────────
 
-    // Step 2 — signer1 confirms → should execute
-    const confirmResult = await signer1.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildConfirmMsg(0n),
+    it('executes transfer when second signer signs (2-of-3)', async () => {
+        const proposalId = await multisig.getNextProposalId();
+        const sendValue  = toNano('1');
+
+        // signer0 proposes
+        await sendMsg(multisig, signer0,
+            { $$type: 'Propose', queryId: 0n, to: recipient.address, value: sendValue, payload: null });
+
+        // signer1 signs
+        await sendMsg(multisig, signer1,
+            { $$type: 'Sign', queryId: 0n, proposalId });
+
+        const recipientBefore = await recipient.getBalance();
+
+        // signer0 executes
+        const execResult = await sendMsg(multisig, signer0,
+            { $$type: 'Execute', queryId: 0n, proposalId });
+
+        expect(execResult.transactions).toHaveTransaction({
+            from: multisig.address,
+            to: recipient.address,
+            success: true,
+        });
+        expect(await recipient.getBalance()).toBeGreaterThan(recipientBefore);
+
+        const proposal = await multisig.getGetProposal(proposalId);
+        expect(proposal!.executed).toBe(true);
     });
 
-    expect(confirmResult.transactions).toHaveTransaction({
-      from: multisig.address,
-      to: recipient.address,
-      value: sendValue,
-      success: true,
+    it('does NOT execute with only one signature (threshold=2)', async () => {
+        const proposalId = await multisig.getNextProposalId();
+
+        await sendMsg(multisig, signer0,
+            { $$type: 'Propose', queryId: 0n, to: recipient.address, value: toNano('1'), payload: null });
+
+        // Attempt execute with only signer0's signature
+        const result = await sendMsg(multisig, signer0,
+            { $$type: 'Execute', queryId: 0n, proposalId });
+
+        expect(result.transactions).toHaveTransaction({
+            from: signer0.address,
+            to: multisig.address,
+            success: false,
+        });
+
+        const proposal = await multisig.getGetProposal(proposalId);
+        expect(proposal!.executed).toBe(false);
+        expect(proposal!.signCount).toBe(1n);
     });
 
-    const recipientAfter = await recipient.getBalance();
-    expect(recipientAfter).toBeGreaterThan(recipientBefore);
+    it('prevents double-execution of an already-executed proposal', async () => {
+        const proposalId = await multisig.getNextProposalId();
 
-    const proposal = await multisig.getProposal(0n);
-    expect(proposal!.executed).toBe(true);
-  });
+        await sendMsg(multisig, signer0,
+            { $$type: 'Propose', queryId: 0n, to: recipient.address, value: toNano('1'), payload: null });
+        await sendMsg(multisig, signer1,
+            { $$type: 'Sign', queryId: 0n, proposalId });
+        await sendMsg(multisig, signer0,
+            { $$type: 'Execute', queryId: 0n, proposalId });
 
-  it('does NOT execute after only one confirmation (proposer counts)', async () => {
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('1')),
+        // Second execute should fail
+        const result = await sendMsg(multisig, signer0,
+            { $$type: 'Execute', queryId: 0n, proposalId });
+
+        expect(result.transactions).toHaveTransaction({
+            from: signer0.address,
+            to: multisig.address,
+            success: false,
+        });
     });
 
-    const proposal = await multisig.getProposal(0n);
-    expect(proposal!.executed).toBe(false);
-    expect(proposal!.confirmations).toBe(1); // only signer0
-  });
+    // ── 4. Revocation ────────────────────────────────────────────────────────
 
-  it('prevents double-execution when third signer also confirms', async () => {
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('1')),
+    it('allows a signer to revoke their own signature', async () => {
+        const proposalId = await multisig.getNextProposalId();
+
+        await sendMsg(multisig, signer0,
+            { $$type: 'Propose', queryId: 0n, to: recipient.address, value: toNano('1'), payload: null });
+        await sendMsg(multisig, signer1,
+            { $$type: 'Sign', queryId: 0n, proposalId });
+
+        // signer1 revokes
+        const revokeResult = await sendMsg(multisig, signer1,
+            { $$type: 'Revoke', queryId: 0n, proposalId });
+
+        expect(revokeResult.transactions).toHaveTransaction({
+            from: signer1.address,
+            to: multisig.address,
+            success: true,
+        });
+
+        // Now only 1 signature — execute should fail
+        const result = await sendMsg(multisig, signer0,
+            { $$type: 'Execute', queryId: 0n, proposalId });
+
+        expect(result.transactions).toHaveTransaction({
+            from: signer0.address,
+            to: multisig.address,
+            success: false,
+        });
     });
 
-    await signer1.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildConfirmMsg(0n),
+    // ── 5. Proposal counter ──────────────────────────────────────────────────
+
+    it('increments proposal ID for each new proposal', async () => {
+        const idBefore = await multisig.getNextProposalId();
+        const propose = { $$type: 'Propose' as const, queryId: 0n, to: recipient.address, value: toNano('0.5'), payload: null };
+        await sendMsg(multisig, signer0, propose);
+        await sendMsg(multisig, signer0, propose);
+
+        expect(await multisig.getNextProposalId()).toBe(idBefore + 2n);
     });
-
-    // signer2 tries to confirm again — should fail (already executed)
-    const result = await signer2.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildConfirmMsg(0n),
-    });
-
-    expect(result.transactions).toHaveTransaction({
-      from: signer2.address,
-      to: multisig.address,
-      success: false,
-    });
-  });
-
-  // ── 4. Revocation ────────────────────────────────────────────────────────
-
-  it('allows any signer to revoke a pending proposal', async () => {
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('1')),
-    });
-
-    await signer1.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildRevokeMsg(0n),
-    });
-
-    const proposal = await multisig.getProposal(0n);
-    expect(proposal!.revoked).toBe(true);
-  });
-
-  it('prevents confirmation of a revoked proposal', async () => {
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('1')),
-    });
-
-    await signer1.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildRevokeMsg(0n),
-    });
-
-    const result = await signer2.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildConfirmMsg(0n),
-    });
-
-    expect(result.transactions).toHaveTransaction({
-      from: signer2.address,
-      to: multisig.address,
-      success: false,
-    });
-  });
-
-  // ── 5. Proposal counter ──────────────────────────────────────────────────
-
-  it('increments proposal ID for each new proposal', async () => {
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('0.5')),
-    });
-
-    await signer0.send({
-      to: multisig.address,
-      value: toNano('0.1'),
-      body: buildProposeMsg(recipient.address, toNano('0.5')),
-    });
-
-    const nextId = await multisig.getNextProposalId();
-    expect(nextId).toBe(2n);
-  });
 });

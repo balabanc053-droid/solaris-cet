@@ -10,6 +10,7 @@
     "deploy": "blueprint run deployMultiSigWrapper"
   },
   "dependencies": {
+    "@ton-community/func-js": "^0.11.0",
     "@ton/core": "^0.63.1",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^16.2.2"
