@@ -14,7 +14,6 @@ on:
       - "Community Automation"
       - "Deploy Solaris CET to GitHub Pages"
       - "Lighthouse CI — Quality Gate"
-      - "Resolve PR Branch Conflicts"
       - "TON Chain Indexer"
     types: [requested]
 
