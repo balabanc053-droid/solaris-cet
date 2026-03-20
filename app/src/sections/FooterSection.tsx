@@ -296,6 +296,9 @@ const FooterSection = () => {
               </div>
             </div>
           </div>
+          <p className="mt-6 text-center font-mono text-[10px] tracking-[0.3em] uppercase text-white/20 hover:text-solaris-gold/90 transition-all duration-700 cursor-default select-none">
+            Architected by Claudiu
+          </p>
         </footer>
       </div>
     </section>

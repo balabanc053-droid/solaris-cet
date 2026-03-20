@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import Navigation from './components/Navigation';
 import CursorGlow from './components/CursorGlow';
+import TouchRipple from './components/TouchRipple';
 import LazyLoadWrapper from './components/LazyLoadWrapper';
 import { ErrorBoundary } from './components/ErrorBoundary';
 // Pinned sections — loaded eagerly so the snap/scroll setup can find their ScrollTriggers
@@ -19,16 +20,18 @@ const HowToBuySection = lazy(() => import('./sections/HowToBuySection'));
 const MiningCalculatorSection = lazy(() => import('./sections/MiningCalculatorSection'));
 const SecuritySection = lazy(() => import('./sections/SecuritySection'));
 const WhitepaperSection = lazy(() => import('./sections/WhitepaperSection'));
+const DevResourcesSection = lazy(() => import('./sections/DevResourcesSection'));
 const HighIntelligenceSection = lazy(() => import('./sections/HighIntelligenceSection'));
 const EcosystemIndexSection = lazy(() => import('./sections/EcosystemIndexSection'));
 const ResourcesSection = lazy(() => import('./sections/ResourcesSection'));
 const FooterSection = lazy(() => import('./sections/FooterSection'));
 import { LanguageContext, useLanguageState } from './hooks/useLanguage';
+import { Analytics } from '@vercel/analytics/react';
 import './App.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const LOADING_DURATION_MS = 1800;
+const LOADING_DURATION_MS = 800;
 
 function AppContent() {
   const mainRef = useRef<HTMLDivElement>(null);
@@ -154,6 +157,9 @@ function AppContent() {
       {/* Cursor glow effect */}
       <CursorGlow />
 
+      {/* Touch ripple effect (mobile) */}
+      <TouchRipple />
+
       <div ref={mainRef} className="relative bg-solaris-dark min-h-screen">
         {/* Noise overlay */}
         <div className="noise-overlay" />
@@ -240,7 +246,12 @@ function AppContent() {
             </LazyLoadWrapper>
           </div>
           
-          {/* Section 12: High Intelligence - pin: false */}
+          {/* Section 12: Developer Resources - pin: false */}
+          <div className="relative z-[106]">
+            <LazyLoadWrapper><DevResourcesSection /></LazyLoadWrapper>
+          </div>
+
+          {/* Section 13: High Intelligence - pin: false */}
           <div className="relative z-[108]">
             <LazyLoadWrapper>
               <ErrorBoundary><HighIntelligenceSection /></ErrorBoundary>
@@ -277,6 +288,7 @@ function App() {
   return (
     <TonConnectUIProvider manifestUrl="https://aamclaudiu-hash.github.io/solaris-cet/tonconnect-manifest.json">
       <AppContent />
+      <Analytics />
     </TonConnectUIProvider>
   );
 }

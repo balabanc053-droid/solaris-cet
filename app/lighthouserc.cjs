@@ -4,16 +4,13 @@
  * Blocks merge if Performance, Accessibility, Best Practices, or SEO
  * scores fall below their minimum thresholds.
  *
- * Runs a single audit per URL using LHCI's built-in static file server
- * (staticDistDir), which avoids IPv4/IPv6 connectivity issues with a
- * separate Vite preview server in CI.
+ * Serves the pre-built dist directory directly via staticDistDir —
+ * no preview server is required in CI.
  */
 module.exports = {
   ci: {
     collect: {
-      /* Serve the Vite build output directly — no separate preview server needed.
-         LHCI starts its own static HTTP server, which avoids the localhost/127.0.0.1
-         IPv4-vs-IPv6 timeout seen when using `npm run preview` + wait-on in CI. */
+      /* Serve the pre-built dist directory directly — no preview server needed */
       staticDistDir: './dist',
       numberOfRuns: 1,
       settings: {
@@ -23,12 +20,15 @@ module.exports = {
         throttlingMethod: 'provided',
         /* Only audit the categories we care about */
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+        /* Required in GitHub Actions (container) — Chrome refuses to start
+           without --no-sandbox in a non-privileged Linux environment. */
+        chromeFlags: '--no-sandbox --headless --disable-gpu',
       },
     },
     assert: {
       assertions: {
         /* Core categories — realistic thresholds for a complex GSAP/React SPA */
-        'categories:performance': ['error', { minScore: 0.8 }],
+        'categories:performance': ['error', { minScore: 0.80 }],
         'categories:accessibility': ['error', { minScore: 0.4 }],
         'categories:best-practices': ['error', { minScore: 0.4 }],
         'categories:seo': ['error', { minScore: 0.4 }],

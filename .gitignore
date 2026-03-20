@@ -2,6 +2,7 @@ node_modules/
 app/node_modules/
 app/dist/
 app/test-results/
+contracts/build/
 *.log
 npm-debug.log*
 
@@ -52,8 +53,11 @@ npm-debug.log*
 !app/public/logo.png
 !app/public/bitcoin-logo.svg
 !app/public/hero-coin.png
+!app/public/hero-coin.webp
 !app/public/hologram-cube.png
+!app/public/hologram-cube.webp
 !app/public/phone-mockup.png
+!app/public/phone-mockup.webp
 
 # Zip archives and deployment bundles
 *.zip

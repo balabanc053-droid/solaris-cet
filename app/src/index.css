@@ -1,8 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 @layer base {
   :root {
@@ -347,6 +344,27 @@
 }
 
 /* ─────────────────────────────────────────────
+   TOUCH RIPPLE (mobile cursor-glow replacement)
+───────────────────────────────────────────── */
+
+.touch-ripple {
+  position: fixed;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 201, 76, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9998;
+  animation: touch-ripple-expand 600ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes touch-ripple-expand {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* ─────────────────────────────────────────────
    SCAN LINE
 ───────────────────────────────────────────── */
 
@@ -569,7 +587,7 @@
   background: linear-gradient(90deg, #F2C94C, #2EE7FF, #F2C94C);
   background-size: 200% 100%;
   border-radius: 1px;
-  animation: loading-bar 1.8s ease forwards, shimmer 1.5s linear infinite;
+  animation: loading-bar 0.8s ease forwards, shimmer 1.5s linear infinite;
   will-change: width, background-position;
 }
 
@@ -690,6 +708,11 @@
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.oracle-search-wrapper:focus-within {
+  border-color: rgba(0, 242, 255, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 242, 255, 0.15), 0 0 22px rgba(0, 242, 255, 0.12);
+}
+
 .oracle-search-wrapper.oracle-search-active {
   border-color: rgba(242, 201, 76, 0.55);
   animation: oracle-border-pulse 1.8s ease-in-out infinite;
@@ -719,7 +742,7 @@
   background: transparent;
   border: none;
   outline: none;
-  padding: 10px 36px 10px 34px;
+  padding: 10px 10px 10px 34px;
   font-size: 13px;
   font-family: 'IBM Plex Mono', monospace;
   color: rgba(244, 246, 255, 0.9);
@@ -741,6 +764,35 @@
   width: 14px;
   height: 14px;
   color: rgba(242, 201, 76, 0.75);
+}
+
+.oracle-search-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(242, 201, 76, 0.10);
+  border: 1px solid rgba(242, 201, 76, 0.30);
+  border-radius: 8px;
+  color: rgba(242, 201, 76, 0.85);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 5px 10px;
+  margin-right: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.oracle-search-btn:hover:not(:disabled) {
+  background: rgba(242, 201, 76, 0.20);
+  border-color: rgba(242, 201, 76, 0.55);
+}
+
+.oracle-search-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ─────────────────────────────────────────────
