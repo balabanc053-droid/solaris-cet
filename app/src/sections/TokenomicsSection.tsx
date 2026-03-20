@@ -2,6 +2,8 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { Coins, Pickaxe, Users, TrendingDown } from 'lucide-react';
 import GlowOrbs from '../components/GlowOrbs';
+import LivePoolStats from '../components/LivePoolStats';
+import ChainStateWidget from '../components/ChainStateWidget';
 
 
 const CET_TOTAL_SUPPLY = 9000;
@@ -223,13 +225,17 @@ const TokenomicsSection = () => {
                         href="https://dedust.io/swap/TON/EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB"
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="View CET token on DeDust exchange"
+                        title="View CET token on DeDust exchange"
                         className="font-mono text-[10px] text-solaris-cyan hover:text-solaris-gold transition-colors"
                       >
                         EQB5…lfnB ↗
                       </a>
                     </div>
                   </div>
+                </div>
+                <LivePoolStats />
+                <div className="mt-4">
+                  <ChainStateWidget />
                 </div>
               </div>
 

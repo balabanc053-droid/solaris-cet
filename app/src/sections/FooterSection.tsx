@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { Download, FileText, Mail, ArrowRight, Sun, Github, Twitter, MessageCircle, Send, Globe, Copy, CheckCircle } from 'lucide-react';
+import SocialShare from '../components/SocialShare';
 
 // Constants defined once to avoid duplication and maintain a single source of truth
 const GITHUB_URL = 'https://github.com/aamclaudiu-hash/solaris-cet';
@@ -116,12 +117,12 @@ const FooterSection = () => {
               Start mining in <span className="text-gradient-animated">minutes</span>.
             </h2>
             <p className="text-solaris-muted text-base lg:text-lg mb-8 max-w-lg mx-auto">
-              Download Solaris Nova. Connect a wallet. Begin earning on the bridge between current AI and High Intelligence.
+              Download the Solaris CET App. Connect a wallet. Begin earning on the bridge between current AI and High Intelligence.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <button className="btn-filled-gold flex items-center gap-2 group">
                 <Download className="w-4 h-4" />
-                Download Nova App
+                Download Solaris CET App
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
               <a
@@ -135,6 +136,34 @@ const FooterSection = () => {
               </a>
             </div>
           </div>
+        </div>
+
+        {/* Founder Card */}
+        <div className="glass-card p-6 mb-6 flex flex-col sm:flex-row items-center gap-5">
+          <div className="shrink-0 w-16 h-16 rounded-2xl overflow-hidden border-2 border-solaris-gold/30 bg-solaris-gold/10 flex items-center justify-center">
+            {/* Founder avatar — LinkedIn profile */}
+            <span className="font-display font-bold text-2xl text-solaris-gold">CB</span>
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <div className="hud-label text-solaris-gold text-[10px] mb-1">FOUNDER &amp; CREATOR</div>
+            <h3 className="font-display font-semibold text-solaris-text text-lg leading-tight mb-0.5">
+              Claudiu Ciprian Balaban
+            </h3>
+            <p className="text-solaris-muted text-sm">
+              Visionary behind Solaris CET · AI &amp; Blockchain Strategist · Bridge between High Intelligence and decentralized finance on TON.
+            </p>
+          </div>
+          <a
+            href="https://www.linkedin.com/in/claudiu-ciprian-balaban-76ab8a394/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 px-4 py-2 rounded-xl bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#4FC3F7] text-sm font-medium hover:bg-[#0A66C2]/30 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            LinkedIn Profile
+          </a>
         </div>
 
         {/* Contract address */}
@@ -250,10 +279,12 @@ const FooterSection = () => {
           </div>
           <div className="my-6 holo-line" />
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-            <p className="text-solaris-muted/60 text-sm">
+            <p className="text-solaris-muted text-sm">
               © {new Date().getFullYear()} Solaris CET. AI Bridge to High Intelligence. All rights reserved.
             </p>
           <div className="flex flex-col sm:flex-row items-center gap-3">
+              <SocialShare />
+              <div className="hidden sm:block w-px h-4 bg-white/10" />
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[11px] text-solaris-gold font-semibold">₿</span>
                 <span className="font-mono text-[11px] text-solaris-gold">POWERED BY BITCOIN</span>
@@ -265,6 +296,9 @@ const FooterSection = () => {
               </div>
             </div>
           </div>
+          <p className="mt-6 text-center font-mono text-[10px] tracking-[0.3em] uppercase text-white/20 hover:text-solaris-gold/90 transition-all duration-700 cursor-default select-none">
+            Architected by Claudiu
+          </p>
         </footer>
       </div>
     </section>

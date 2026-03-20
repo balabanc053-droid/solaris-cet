@@ -1,0 +1,17 @@
+{
+  "token": {
+    "symbol": "CET",
+    "name": "SOLARIS CET",
+    "contract": "EQBbUfeIo6yrNRButZGdf4WRJZZ3IDkN8kHJbsKlu3xxypWX",
+    "totalSupply": null,
+    "decimals": 9
+  },
+  "pool": {
+    "address": "EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB",
+    "tvlTon": null,
+    "tvlUsd": null,
+    "priceUsd": null,
+    "tonPriceUsd": null
+  },
+  "updatedAt": "2026-03-10T06:23:33Z"
+}
