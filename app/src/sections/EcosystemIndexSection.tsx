@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import { gsap } from 'gsap';
-import { TrendingUp, ExternalLink, BarChart2 } from 'lucide-react';
+import { TrendingUp, ExternalLink, BarChart2, Zap } from 'lucide-react';
+import { useEdgeState } from '../hooks/useEdgeState';
 
 interface CryptoProject {
   name: string;
@@ -110,6 +111,8 @@ const EcosystemIndexSection = () => {
   const featuredRef = useRef<HTMLDivElement>(null);
   const categoriesRef = useRef<HTMLDivElement>(null);
 
+  const { state: edgeState, contractAddress } = useEdgeState();
+
   useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -208,7 +211,69 @@ const EcosystemIndexSection = () => {
         </div>
 
         {/* CMC20 Index featured card */}
-        <div ref={featuredRef} className="mb-14">
+        <div ref={featuredRef} className="mb-14 space-y-4">
+          {/* CET on-chain state card — data served from static edge API */}
+          <div className="glass-card p-5 lg:p-6 border border-solaris-cyan/20 flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-solaris-cyan/10 border border-solaris-cyan/20 flex items-center justify-center shrink-0">
+                <Zap className="w-6 h-6 text-solaris-cyan" />
+              </div>
+              <div>
+                <span className="hud-label text-solaris-cyan text-[10px]">EDGE STATE · ON-CHAIN</span>
+                <h3 className="font-display font-semibold text-solaris-text text-base mt-0.5">
+                  Solaris CET · Live Token State
+                </h3>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="text-solaris-muted text-[11px] mb-1">Symbol</div>
+                <div className="font-mono font-semibold text-sm text-solaris-gold">
+                  {edgeState ? edgeState.token.symbol : '—'}
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="text-solaris-muted text-[11px] mb-1">Total Supply</div>
+                <div className="font-mono font-semibold text-sm text-solaris-text">
+                  {edgeState?.token.totalSupply != null
+                    ? (Number(edgeState.token.totalSupply) / 10 ** edgeState.token.decimals).toLocaleString()
+                    : '9,000'}
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="text-solaris-muted text-[11px] mb-1">Price USD</div>
+                <div className="font-mono font-semibold text-sm text-emerald-400">
+                  {edgeState?.pool.priceUsd != null
+                    ? `$${Number(edgeState.pool.priceUsd).toFixed(4)}`
+                    : '—'}
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5">
+                <div className="text-solaris-muted text-[11px] mb-1">Updated At</div>
+                <div className="font-mono font-semibold text-sm text-solaris-muted">
+                  {edgeState
+                    ? new Date(edgeState.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : '—'}
+                </div>
+              </div>
+            </div>
+
+            {contractAddress && (
+              <div className="pt-1 border-t border-white/5">
+                <span className="text-solaris-muted text-[11px]">Contract: </span>
+                <a
+                  href={`https://tonviewer.com/${contractAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[11px] text-solaris-cyan/70 hover:text-solaris-cyan transition-colors break-all"
+                >
+                  {contractAddress}
+                </a>
+              </div>
+            )}
+          </div>
+
           <a
             href="https://app.reserve.org/bsc/index-dtf/0x2f8a339b5889ffac4c5a956787cda593b3c36867/overview"
             target="_blank"
