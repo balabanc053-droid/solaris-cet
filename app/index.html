@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Redirect to production site on Vercel -->
-    <meta http-equiv="refresh" content="0; url=https://solaris-cet.vercel.app/" />
-
     <!-- Primary Meta Tags -->
     <title>Solaris CET — Decentralized Token on TON Blockchain</title>
     <meta name="title" content="Solaris CET — Decentralized Token on TON Blockchain" />
@@ -49,11 +46,11 @@
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self';
-                   script-src 'self' 'unsafe-inline' https://plausible.io;
-                   style-src 'self' 'unsafe-inline';
+                   script-src 'self' 'unsafe-inline' https://plausible.io https://telegram.org;
+                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
                    img-src 'self' data: https:;
-                   font-src 'self' data:;
-                   connect-src 'self' https://toncenter.com https://tonapi.io https://github.com https://api.dedust.io https://bridge.tonapi.io https://tonconnectapi.com https://plausible.io;
+                   font-src 'self' data: https://fonts.gstatic.com;
+                   connect-src 'self' https://toncenter.com https://tonapi.io https://github.com https://api.dedust.io https://bridge.tonapi.io https://tonconnectapi.com https://plausible.io https://telegram.org;
                    frame-src 'none';" />
 
     <!-- Structured Data -->
@@ -74,12 +71,22 @@
     }
     </script>
 
+    <!-- Google Fonts: preconnect + preload for zero layout shift -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 
-    <!-- JavaScript redirect fallback for browsers that ignore meta refresh.
-         Update the URL below (and the meta refresh above) if the production
-         domain ever changes. -->
-    <script>window.location.replace("https://solaris-cet.vercel.app/");</script>
+    <!-- Telegram Mini App SDK — enables window.Telegram.WebApp when the app
+         runs inside Telegram. The SDK is served from telegram.org's CDN and
+         updated by Telegram; SRI is intentionally omitted because pinning a
+         hash would break every time Telegram pushes an update. -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   </head>
   <body>
     <!-- Skip to main content (accessibility) -->
