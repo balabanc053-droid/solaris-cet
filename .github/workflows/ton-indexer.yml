@@ -1,0 +1,61 @@
+name: TON Chain Indexer
+
+on:
+  schedule:
+    # Run every 1 hour
+    - cron: "0 * * * *"
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Python dependencies
+        run: pip install requests --quiet
+
+      - name: Run indexer script
+        env:
+          CET_CONTRACT: "EQBbUfeIo6yrNRButZGdf4WRJZZ3IDkN8kHJbsKlu3xxypWX"
+          DEDUST_POOL: "EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB"
+          CET_DECIMALS: "9"
+        run: python3 .github/scripts/update_state.py
+
+      - name: Commit state.json to gh-pages branch
+        run: |
+          set -euo pipefail
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stash the generated file before switching branches
+          cp app/public/api/state.json /tmp/state.json
+
+          # Switch to gh-pages (create orphan if it doesn't exist yet)
+          if git fetch origin gh-pages 2>/dev/null; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . --quiet || true
+          fi
+
+          mkdir -p app/public/api
+          cp /tmp/state.json app/public/api/state.json
+          git add app/public/api/state.json
+
+          # Only commit when data has actually changed
+          if git diff --cached --quiet; then
+            echo "No changes to state.json — skipping commit."
+          else
+            git commit -m "chore(data): update CET token state"
+            git push origin gh-pages
+          fi

@@ -1,5 +1,109 @@
 node_modules/
 app/node_modules/
 app/dist/
+app/test-results/
+contracts/build/
 *.log
 npm-debug.log*
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Root-level stray files & build artifacts
+#
+# All source files and configuration belong inside the app/ subdirectory.
+# The patterns below prevent npm packages, Babel helpers, compiled assets,
+# copied component files, and miscellaneous artefacts from being accidentally
+# tracked when they end up at the repository root.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# npm / yarn scoped-package directories dropped at root
+@*/
+
+# JavaScript build helpers (Babel runtime, regenerator, etc.)
+*.js.map
+/*.js
+/main.js
+
+# Compiled CSS bundles at root
+/*.css
+/styles.css
+
+# TypeScript source files inadvertently copied to root
+/*.ts
+/*.tsx
+
+# HTML files at root (not the project index)
+/index.html
+/solaris-improved.html
+/*.html
+
+# Images at root (belong in app/public/)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+*.svg
+
+# Track PWA and OG assets in app/public/
+!app/public/favicon.svg
+!app/public/icon-192.png
+!app/public/icon-512.png
+!app/public/og-image.png
+!app/public/logo.png
+!app/public/bitcoin-logo.svg
+!app/public/hero-coin.png
+!app/public/hologram-cube.png
+!app/public/phone-mockup.png
+
+# Zip archives and deployment bundles
+*.zip
+/solaris-cet-deploy/
+/solaris-cet-deploy
+/solaris-cet-main/
+
+# Babel / transpiler helpers directories
+/code-frame/
+/compat-data/
+/config/
+/core/
+/docs/
+/errors/
+/generator/
+/gensync-utils/
+/helpers/
+/parser/
+/plugin-*/
+/helper-*/
+/tools/
+/transformation/
+/vendor/
+/src/
+
+# Track project documentation
+!docs/
+
+# Miscellaneous files that do not belong at root
+/components.json
+/fix-project.sh
+/DEPLOY_WINDOWS.bat
+/robots.txt
+/site.webmanifest
+/sitemap.xml
+/info.md
+/FIX_COMPLETE.md
+/PROJECT_SUMMARY.md
+/REPARATII_APLICATE.md
+/REZUMAT_FINAL.md
+/zi*
+
+# Root-level package manifests and TS configs (belong inside app/)
+/package.json
+/package-lock.json
+/tsconfig.json
+/tsconfig.app.json
+/tsconfig.node.json
+/postcss.config.js
+/vite.config.ts
+/eslint.config.js
+/tailwind.config.js
