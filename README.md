@@ -97,30 +97,52 @@ npx tsc --noEmit
 solaris-cet/
 ├── .github/
 │   ├── workflows/
-│   │   └── deploy-pages.yml   # CI/CD: build + deploy to GitHub Pages
-│   ├── scripts/
-│   │   └── update_state.py    # DeDust RPC → api/state.json snapshot
-│   └── ISSUE_TEMPLATE/        # Bug report & feature request forms
-├── app/                       # All source code
+│   │   ├── ci.yml              # Quality gate: lint, typecheck, unit tests, E2E
+│   │   ├── deploy-pages.yml    # Build + deploy to GitHub Pages on every push to main
+│   │   ├── codeql.yml          # CodeQL SAST security scanning
+│   │   ├── lighthouse-ci.yml   # Lighthouse performance audit (≥ 85 required)
+│   │   ├── multisig-ci.yml     # TON multi-sig contract build & test
+│   │   └── ton-indexer.yml     # TON blockchain state indexing
+│   ├── ISSUE_TEMPLATE/         # Bug report and feature request forms
+│   └── PULL_REQUEST_TEMPLATE.md
+├── api/                        # Edge API routes (Vercel)
+│   └── chat/route.ts           # AI chat proxy (edge runtime)
+├── app/                        # React + TypeScript + Vite source
 │   ├── src/
-│   │   ├── sections/          # Page sections (Hero, Tokenomics, etc.)
-│   │   ├── components/        # Reusable UI components
-│   │   │   └── ui/            # shadcn/ui primitives
-│   │   ├── hooks/             # Custom React hooks (pool data, language, etc.)
-│   │   ├── lib/               # Utilities and chain state types
-│   │   ├── App.tsx            # Root component; GSAP plugin registration
-│   │   └── main.tsx           # Entry point
-│   ├── public/
-│   │   └── api/state.json     # Static on-chain data snapshot (updated by CI)
+│   │   ├── sections/           # Page sections (Hero, Tokenomics, etc.)
+│   │   ├── components/         # Reusable UI components
+│   │   │   ├── ui/             # shadcn/ui primitives (Radix-based)
+│   │   │   ├── AnimatedCounter.tsx   # GSAP counter triggered by IntersectionObserver
+│   │   │   ├── CursorGlow.tsx        # Mouse-following radial-gradient spotlight
+│   │   │   ├── GlowOrbs.tsx          # Ambient animated glow blobs (gold / cyan / mixed)
+│   │   │   ├── Navigation.tsx        # Fixed nav with scroll-progress bar
+│   │   │   ├── ReActTerminal.tsx     # AI reasoning terminal (ReAct protocol)
+│   │   │   └── ParticleCanvas.tsx    # Interactive particle field (canvas)
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── i18n/               # Internationalization (multi-language support)
+│   │   ├── lib/                # Utility functions & chain-state helpers
+│   │   ├── workers/            # Web Workers (AI inference, mining)
+│   │   ├── App.tsx             # Root component; GSAP ScrollTrigger registration
+│   │   └── main.tsx            # Entry point
+│   ├── api/                    # App-level API routes (Node.js runtime)
+│   │   └── chat/route.ts       # OpenAI-powered chat endpoint
+│   ├── public/                 # Static assets (icons, images, state JSON)
+│   ├── tests/                  # Playwright E2E tests
 │   ├── index.html
 │   ├── vite.config.ts         # Vite + PWA + Brotli config
 │   ├── tailwind.config.js
+│   ├── postcss.config.js
 │   └── package.json
-├── contracts/
-│   └── MultisigWrapper.tact   # TON Multi-Sig smart contract (Tact)
-├── ARCHITECTURE.md            # Detailed system architecture documentation
+├── contracts/                  # TON smart contracts (Tact language)
+├── docs/                       # Additional documentation
+├── scripts/                    # Automation scripts (state updates, etc.)
+├── simulations/                # Financial / tokenomics simulations
+├── CMC_APPLICATION.md          # CoinMarketCap listing application
 ├── CONTRIBUTING.md
-└── LICENSE
+├── LICENSE
+├── README.md
+├── SECURITY.md
+└── WHITEPAPER.md
 ```
 
 ---
@@ -146,12 +168,19 @@ For a deep-dive into each layer, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## 🔗 On-Chain References
 
-| Resource | Value |
-|---|---|
-| Token supply | 9,000 CET (fixed) |
-| Blockchain | TON Mainnet |
-| DeDust pool | [`EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB`](https://dedust.io/pools/EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB) |
-| Whitepaper (IPFS) | [`bafkreieggm2l7favvjw4amybbobastjo6kcrdi33gzcvtzrur5opoivd3a`](https://ipfs.io/ipfs/bafkreieggm2l7favvjw4amybbobastjo6kcrdi33gzcvtzrur5opoivd3a) |
+| Layer         | Technology                                      |
+|---------------|-------------------------------------------------|
+| UI Framework  | [React 19](https://react.dev/)                  |
+| Language      | [TypeScript 5](https://www.typescriptlang.org/) |
+| Bundler       | [Vite 8](https://vite.dev/) + Rolldown          |
+| Styling       | [Tailwind CSS 4](https://tailwindcss.com/)      |
+| Components    | [shadcn/ui](https://ui.shadcn.com/) (Radix)     |
+| Animations    | [GSAP 3](https://gsap.com/)                     |
+| AI/ML         | [ONNX Runtime Web](https://onnxruntime.ai/) + [OpenAI](https://openai.com/) |
+| Blockchain    | [TON Network](https://ton.org/) via TonConnect  |
+| Hosting       | [GitHub Pages](https://pages.github.com/) / [Vercel](https://vercel.com/) |
+| CI/CD         | [GitHub Actions](https://github.com/features/actions) |
+| Security      | CodeQL SAST, Dependabot, npm audit              |
 
 ---
 
@@ -166,3 +195,4 @@ Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting a pull reques
 
 This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) for details.
 You are free to fork, modify, and host your own instance under the same license terms.
+

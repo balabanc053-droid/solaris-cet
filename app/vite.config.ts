@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     // Emit Brotli-compressed (.br) assets alongside regular files.
@@ -28,8 +28,8 @@ export default defineConfig({
         theme_color: '#05060B',
         background_color: '#05060B',
         display: 'standalone',
-        start_url: './',
-        scope: './',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'icon-192.png',
@@ -130,12 +130,8 @@ export default defineConfig({
       },
     },
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: true,
     chunkSizeWarningLimit: 1000,
-  },
-  esbuild: {
-    drop: ['debugger'],
-    legalComments: 'none',
   },
   resolve: {
     alias: {
