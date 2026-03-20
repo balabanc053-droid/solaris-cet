@@ -115,8 +115,10 @@ const HybridEngineSection = () => {
       {/* Background coin */}
       <img
         ref={coinRef}
-        src="/hero-coin.png"
+        src={`${import.meta.env.BASE_URL}hero-coin.png`}
         alt=""
+        width="400"
+        height="400"
         className="absolute left-[60%] top-[45%] -translate-x-1/2 -translate-y-1/2 w-[min(35vw,400px)] opacity-0 pointer-events-none"
       />
 

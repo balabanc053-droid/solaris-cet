@@ -1,4 +1,4 @@
-export type LangCode = 'en' | 'es' | 'zh' | 'ru';
+export type LangCode = 'en' | 'es' | 'zh' | 'ru' | 'ro';
 
 export interface Translations {
   nav: {
@@ -7,6 +7,7 @@ export interface Translations {
     roadmap: string;
     howToBuy: string;
     whitepaper: string;
+    resources: string;
   };
   hero: {
     tagline: string;
@@ -29,6 +30,7 @@ const translations: Record<LangCode, Translations> = {
       roadmap: 'Roadmap',
       howToBuy: 'How to Buy',
       whitepaper: 'Whitepaper',
+      resources: 'Resources',
     },
     hero: {
       tagline: 'The Digital Foundation of Cetățuia',
@@ -49,6 +51,7 @@ const translations: Record<LangCode, Translations> = {
       roadmap: 'Hoja de Ruta',
       howToBuy: 'Cómo Comprar',
       whitepaper: 'Libro Blanco',
+      resources: 'Recursos',
     },
     hero: {
       tagline: 'La Base Digital de Cetățuia',
@@ -69,6 +72,7 @@ const translations: Record<LangCode, Translations> = {
       roadmap: '路线图',
       howToBuy: '如何购买',
       whitepaper: '白皮书',
+      resources: '资源',
     },
     hero: {
       tagline: 'Cetățuia 的数字基础',
@@ -89,6 +93,7 @@ const translations: Record<LangCode, Translations> = {
       roadmap: 'Дорожная карта',
       howToBuy: 'Как купить',
       whitepaper: 'Белая книга',
+      resources: 'Ресурсы',
     },
     hero: {
       tagline: 'Цифровая Основа Cetățuia',
@@ -100,6 +105,27 @@ const translations: Record<LangCode, Translations> = {
       title: 'Токеномика',
       supply: 'Общий запас',
       poolAddress: 'Адрес пула DeDust',
+    },
+  },
+  ro: {
+    nav: {
+      home: 'Acasă',
+      tokenomics: 'Tokenomică',
+      roadmap: 'Foaie de Parcurs',
+      howToBuy: 'Cum să Cumperi',
+      whitepaper: 'Whitepaper',
+      resources: 'Resurse',
+    },
+    hero: {
+      tagline: 'Fundația Digitală a Cetățuiei',
+      subtitle: 'Un token ultra-rar cu 9.000 CET pe blockchain-ul TON',
+      buyNow: 'Cumpără CET',
+      learnMore: 'Află Mai Mult',
+    },
+    tokenomics: {
+      title: 'Tokenomică',
+      supply: 'Ofertă Totală',
+      poolAddress: 'Adresa Pool-ului DeDust',
     },
   },
 };

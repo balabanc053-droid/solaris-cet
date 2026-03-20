@@ -1,9 +1,12 @@
 import { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import Navigation from './components/Navigation';
 import CursorGlow from './components/CursorGlow';
+import TouchRipple from './components/TouchRipple';
 import LazyLoadWrapper from './components/LazyLoadWrapper';
+import { ErrorBoundary } from './components/ErrorBoundary';
 // Pinned sections — loaded eagerly so the snap/scroll setup can find their ScrollTriggers
 import HeroSection from './sections/HeroSection';
 import HybridEngineSection from './sections/HybridEngineSection';
@@ -19,15 +22,18 @@ const SecuritySection = lazy(() => import('./sections/SecuritySection'));
 const WhitepaperSection = lazy(() => import('./sections/WhitepaperSection'));
 const DevResourcesSection = lazy(() => import('./sections/DevResourcesSection'));
 const HighIntelligenceSection = lazy(() => import('./sections/HighIntelligenceSection'));
+const EcosystemIndexSection = lazy(() => import('./sections/EcosystemIndexSection'));
+const ResourcesSection = lazy(() => import('./sections/ResourcesSection'));
 const FooterSection = lazy(() => import('./sections/FooterSection'));
 import { LanguageContext, useLanguageState } from './hooks/useLanguage';
+import { Analytics } from '@vercel/analytics/react';
 import './App.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const LOADING_DURATION_MS = 1800;
+const LOADING_DURATION_MS = 800;
 
-function App() {
+function AppContent() {
   const mainRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -151,6 +157,9 @@ function App() {
       {/* Cursor glow effect */}
       <CursorGlow />
 
+      {/* Touch ripple effect (mobile) */}
+      <TouchRipple />
+
       <div ref={mainRef} className="relative bg-solaris-dark min-h-screen">
         {/* Noise overlay */}
         <div className="noise-overlay" />
@@ -159,60 +168,82 @@ function App() {
         <Navigation />
         
         {/* Main content */}
-        <main className="relative">
+        <main id="main-content" className="relative">
           {/* Section 1: Hero - pin: true */}
           <div className="relative z-10">
-            <HeroSection />
+            <ErrorBoundary>
+              <HeroSection />
+            </ErrorBoundary>
           </div>
           
           {/* Section 2: Hybrid Engine - pin: true */}
           <div className="relative z-20">
-            <HybridEngineSection />
+            <ErrorBoundary>
+              <HybridEngineSection />
+            </ErrorBoundary>
           </div>
           
           {/* Section 3: Intelligence Core - pin: true */}
           <div className="relative z-30">
-            <IntelligenceCoreSection />
+            <ErrorBoundary>
+              <IntelligenceCoreSection />
+            </ErrorBoundary>
           </div>
           
           {/* Section 4: Nova App - pin: true */}
           <div className="relative z-40">
-            <NovaAppSection />
+            <ErrorBoundary>
+              <NovaAppSection />
+            </ErrorBoundary>
           </div>
           
           {/* Section 5: Tokenomics - pin: true */}
           <div className="relative z-50">
-            <TokenomicsSection />
+            <ErrorBoundary>
+              <TokenomicsSection />
+            </ErrorBoundary>
           </div>
           
           {/* Section 6: Compliance - pin: true */}
           <div className="relative z-[60]">
-            <ComplianceSection />
+            <ErrorBoundary>
+              <ComplianceSection />
+            </ErrorBoundary>
           </div>
           
           {/* Section 7: Roadmap - pin: false */}
           <div className="relative z-[70]">
-            <LazyLoadWrapper><RoadmapSection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><RoadmapSection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
 
           {/* Section 8: How to Buy - pin: false */}
           <div className="relative z-[80]">
-            <LazyLoadWrapper><HowToBuySection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><HowToBuySection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
 
           {/* Section 9: Mining Calculator - pin: false */}
           <div className="relative z-[90]">
-            <LazyLoadWrapper><MiningCalculatorSection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><MiningCalculatorSection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
           
           {/* Section 10: Security - pin: false */}
           <div className="relative z-[100]">
-            <LazyLoadWrapper><SecuritySection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><SecuritySection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
           
           {/* Section 11: Whitepaper - pin: false */}
           <div className="relative z-[105]">
-            <LazyLoadWrapper><WhitepaperSection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><WhitepaperSection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
           
           {/* Section 12: Developer Resources - pin: false */}
@@ -222,16 +253,43 @@ function App() {
 
           {/* Section 13: High Intelligence - pin: false */}
           <div className="relative z-[108]">
-            <LazyLoadWrapper><HighIntelligenceSection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><HighIntelligenceSection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
           
-          {/* Section 14: Footer - pin: false */}
+          {/* Section 13: Ecosystem Index - pin: false */}
+          <div className="relative z-[109]">
+            <LazyLoadWrapper>
+              <ErrorBoundary><EcosystemIndexSection /></ErrorBoundary>
+            </LazyLoadWrapper>
+          </div>
+
+          {/* Section 14: Resources - pin: false */}
           <div className="relative z-[110]">
-            <LazyLoadWrapper><FooterSection /></LazyLoadWrapper>
+            <LazyLoadWrapper>
+              <ErrorBoundary><ResourcesSection /></ErrorBoundary>
+            </LazyLoadWrapper>
+          </div>
+          
+          {/* Section 15: Footer - pin: false */}
+          <div className="relative z-[111]">
+            <LazyLoadWrapper>
+              <ErrorBoundary><FooterSection /></ErrorBoundary>
+            </LazyLoadWrapper>
           </div>
         </main>
       </div>
     </LanguageContext.Provider>
+  );
+}
+
+function App() {
+  return (
+    <TonConnectUIProvider manifestUrl="https://aamclaudiu-hash.github.io/solaris-cet/tonconnect-manifest.json">
+      <AppContent />
+      <Analytics />
+    </TonConnectUIProvider>
   );
 }
 
