@@ -20,6 +20,7 @@ const HowToBuySection = lazy(() => import('./sections/HowToBuySection'));
 const MiningCalculatorSection = lazy(() => import('./sections/MiningCalculatorSection'));
 const SecuritySection = lazy(() => import('./sections/SecuritySection'));
 const WhitepaperSection = lazy(() => import('./sections/WhitepaperSection'));
+const DevResourcesSection = lazy(() => import('./sections/DevResourcesSection'));
 const HighIntelligenceSection = lazy(() => import('./sections/HighIntelligenceSection'));
 const EcosystemIndexSection = lazy(() => import('./sections/EcosystemIndexSection'));
 const ResourcesSection = lazy(() => import('./sections/ResourcesSection'));
@@ -245,7 +246,12 @@ function AppContent() {
             </LazyLoadWrapper>
           </div>
           
-          {/* Section 12: High Intelligence - pin: false */}
+          {/* Section 12: Developer Resources - pin: false */}
+          <div className="relative z-[106]">
+            <LazyLoadWrapper><DevResourcesSection /></LazyLoadWrapper>
+          </div>
+
+          {/* Section 13: High Intelligence - pin: false */}
           <div className="relative z-[108]">
             <LazyLoadWrapper>
               <ErrorBoundary><HighIntelligenceSection /></ErrorBoundary>
