@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     // Emit Brotli-compressed (.br) assets alongside regular files.
@@ -28,8 +28,8 @@ export default defineConfig({
         theme_color: '#05060B',
         background_color: '#05060B',
         display: 'standalone',
-        start_url: './',
-        scope: './',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'icon-192.png',
@@ -93,6 +93,21 @@ export default defineConfig({
               },
             },
           },
+          {
+            // Cache ONNX Runtime WASM binaries from jsDelivr CDN for offline use.
+            // Pattern matches both versioned and non-versioned paths, e.g.:
+            //   cdn.jsdelivr.net/npm/onnxruntime-web@1.24.3/dist/...
+            //   cdn.jsdelivr.net/npm/onnxruntime-web/dist/...
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web(@[^/]+)?\/dist\//i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'onnx-wasm-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
         ],
       },
     }),
@@ -115,12 +130,8 @@ export default defineConfig({
       },
     },
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: true,
     chunkSizeWarningLimit: 1000,
-  },
-  esbuild: {
-    drop: ['debugger'],
-    legalComments: 'none',
   },
   resolve: {
     alias: {
