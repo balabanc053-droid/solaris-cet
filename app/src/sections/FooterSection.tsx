@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { Download, FileText, Mail, ArrowRight, Sun, Github, Twitter, MessageCircle, Send, Globe, Copy, CheckCircle } from 'lucide-react';
+import SocialShare from '../components/SocialShare';
 
 // Constants defined once to avoid duplication and maintain a single source of truth
 const GITHUB_URL = 'https://github.com/aamclaudiu-hash/solaris-cet';
@@ -278,10 +279,12 @@ const FooterSection = () => {
           </div>
           <div className="my-6 holo-line" />
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-            <p className="text-solaris-muted/60 text-sm">
+            <p className="text-solaris-muted text-sm">
               © {new Date().getFullYear()} Solaris CET. AI Bridge to High Intelligence. All rights reserved.
             </p>
           <div className="flex flex-col sm:flex-row items-center gap-3">
+              <SocialShare />
+              <div className="hidden sm:block w-px h-4 bg-white/10" />
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[11px] text-solaris-gold font-semibold">₿</span>
                 <span className="font-mono text-[11px] text-solaris-gold">POWERED BY BITCOIN</span>
@@ -293,6 +296,9 @@ const FooterSection = () => {
               </div>
             </div>
           </div>
+          <p className="mt-6 text-center font-mono text-[10px] tracking-[0.3em] uppercase text-white/20 hover:text-solaris-gold/90 transition-all duration-700 cursor-default select-none">
+            Architected by Claudiu
+          </p>
         </footer>
       </div>
     </section>
