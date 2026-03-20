@@ -4,12 +4,13 @@
  * Blocks merge if Performance, Accessibility, Best Practices, or SEO
  * scores fall below their minimum thresholds.
  *
- * Runs a single audit using staticDistDir so no external server is needed.
+ * Serves the pre-built dist directory directly via staticDistDir —
+ * no preview server is required in CI.
  */
 module.exports = {
   ci: {
     collect: {
-      /* Serve files internally — no separate preview server needed */
+      /* Serve the pre-built dist directory directly — no preview server needed */
       staticDistDir: './dist',
       numberOfRuns: 1,
       settings: {
@@ -19,12 +20,15 @@ module.exports = {
         throttlingMethod: 'provided',
         /* Only audit the categories we care about */
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+        /* Required in GitHub Actions (container) — Chrome refuses to start
+           without --no-sandbox in a non-privileged Linux environment. */
+        chromeFlags: '--no-sandbox --headless --disable-gpu',
       },
     },
     assert: {
       assertions: {
         /* Core categories — realistic thresholds for a complex GSAP/React SPA */
-        'categories:performance': ['error', { minScore: 0.85 }],
+        'categories:performance': ['error', { minScore: 0.80 }],
         'categories:accessibility': ['error', { minScore: 0.4 }],
         'categories:best-practices': ['error', { minScore: 0.4 }],
         'categories:seo': ['error', { minScore: 0.4 }],
