@@ -115,11 +115,17 @@ const NovaAppSection = () => {
           {/* Phone mockup */}
           <div className="h-full flex flex-col">
             <div className="flex-1 relative">
-              <img
-                src={`${import.meta.env.BASE_URL}phone-mockup.png`}
-                alt="Solaris CET App"
-                className="w-full h-full object-contain"
-              />
+              <picture>
+                <source srcSet={`${import.meta.env.BASE_URL}phone-mockup.webp`} type="image/webp" />
+                <img
+                  src={`${import.meta.env.BASE_URL}phone-mockup.png`}
+                  alt="Solaris CET App"
+                  width="360"
+                  height="720"
+                  loading="lazy"
+                  className="w-full h-full object-contain"
+                />
+              </picture>
 
               {/* App UI overlay */}
               <div className="absolute inset-[8%] top-[12%] bottom-[10%] flex flex-col">
@@ -129,6 +135,8 @@ const NovaAppSection = () => {
                     <img
                       src={SOLARIS_LOGO_URL}
                       alt="Solaris CET"
+                      width="24"
+                      height="24"
                       className="w-6 h-6 rounded-md object-contain"
                     />
                     <span className="font-display font-semibold text-solaris-text text-sm">CET</span>
@@ -176,6 +184,8 @@ const NovaAppSection = () => {
               <img
                 src={SOLARIS_LOGO_URL}
                 alt="Solaris CET"
+                width="40"
+                height="40"
                 className="w-full h-full object-contain"
               />
             </div>
@@ -189,7 +199,8 @@ const NovaAppSection = () => {
           <div className="space-y-4 mb-6">
             <p className="text-solaris-muted text-sm lg:text-base leading-relaxed">
               Mine <span className="text-solaris-gold font-semibold">CET</span> from your smartphone{' '}
-              <span className="text-solaris-text font-medium">without draining battery</span>.
+              <span className="text-solaris-text font-medium">with minimal battery impact</span>.
+              Mining suspends automatically when the app is in the background.
             </p>
             <p className="text-solaris-muted text-sm lg:text-base leading-relaxed">
               <span className="text-solaris-cyan font-semibold">Liquid staking</span> converts rewards into sCET—so you stay liquid while earning. Powered by the TON blockchain and High-Intelligence AI protocols.
@@ -205,7 +216,7 @@ const NovaAppSection = () => {
               <span className="text-xs text-solaris-cyan font-medium">Liquid Staking</span>
             </div>
             <div className="px-3 py-1.5 rounded-lg bg-emerald-400/10 border border-emerald-400/20">
-              <span className="text-xs text-emerald-400 font-medium">Zero Battery Drain</span>
+              <span className="text-xs text-emerald-400 font-medium">90% Battery Savings</span>
             </div>
           </div>
         </div>

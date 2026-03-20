@@ -1,33 +1,32 @@
 import { Activity, RefreshCw, ExternalLink } from 'lucide-react';
-import { useLivePoolData } from '../hooks/useLivePoolData';
+import { useLivePoolData } from '../hooks/use-live-pool-data';
 
 const DEDUST_POOL_URL =
   'https://dedust.io/pools/EQB5_hZPl4-EI1aWdLSd21c8T9PoKyZK2IJtrDFdPJIelfnB';
 
-const formatNanoValue = (raw: string, unit: string): string => {
-  const num = Number(raw);
-  if (isNaN(num)) return raw;
-  // Values are in nano units (1e-9); divide by 1e9 to get whole units
-  if (num >= 1e9) return `${(num / 1e9).toFixed(2)} ${unit}`;
-  if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-  if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
-  return `${num.toFixed(2)}`;
+const formatUsd = (value: number | null): string => {
+  if (value === null || !Number.isFinite(value)) return '—';
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(2)}K`;
+  return `$${value.toFixed(4)}`;
 };
 
-const formatNano = (raw: string): string => formatNanoValue(raw, 'TON');
-const formatNanoCet = (raw: string): string => formatNanoValue(raw, 'CET');
+const formatPrice = (value: number | null): string => {
+  if (value === null || !Number.isFinite(value)) return '—';
+  if (value < 0.001) return `$${value.toExponential(2)}`;
+  return `$${value.toFixed(4)}`;
+};
 
 const LivePoolStats = () => {
-  const { data, loading, error, lastUpdated } = useLivePoolData();
+  const { priceUsd, tvlUsd, volume24hUsd, tonPriceUsd, loading, error, lastUpdated } =
+    useLivePoolData();
 
-  const stats = data
-    ? [
-        { label: 'TON Reserve', value: formatNano(data.reserveLeft), color: 'cyan' },
-        { label: 'CET Reserve', value: formatNanoCet(data.reserveRight), color: 'gold' },
-        { label: 'LP Fee', value: data.lpFee !== '—' ? `${(Number(data.lpFee) / 10).toFixed(2)}%` : '—', color: 'emerald' },
-        { label: 'LP Supply', value: formatNano(data.totalSupply), color: 'purple' },
-      ]
-    : [];
+  const stats = [
+    { label: 'CET Price', value: formatPrice(priceUsd), color: 'gold' },
+    { label: 'TVL', value: formatUsd(tvlUsd), color: 'cyan' },
+    { label: '24h Volume', value: formatUsd(volume24hUsd), color: 'emerald' },
+    { label: 'TON Price', value: formatUsd(tonPriceUsd), color: 'purple' },
+  ];
 
   return (
     <div className="glass-card p-5 lg:p-6">
@@ -63,41 +62,64 @@ const LivePoolStats = () => {
 
       {/* Stats grid */}
       {error ? (
-        <p className="text-solaris-muted text-xs text-center py-4">
-          Live data temporarily unavailable.{' '}
-          <a
-            href={DEDUST_POOL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-solaris-gold hover:underline"
-          >
-            View on DeDust →
-          </a>
-        </p>
+        <div className="text-center py-4 space-y-2">
+          <p className="text-solaris-muted text-xs">
+            Live data temporarily unavailable.{' '}
+            <a
+              href={DEDUST_POOL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-solaris-gold hover:underline inline-flex items-center gap-1"
+            >
+              View on DeDust
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </p>
+          {lastUpdated && (
+            <p className="text-solaris-muted/60 text-[11px] font-mono">
+              Last cached: {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
+          <p className="text-solaris-muted/60 text-[11px]">
+            Follow us on{' '}
+            <a
+              href="https://twitter.com/SolarisCET"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-solaris-cyan hover:underline"
+            >
+              Twitter / X
+            </a>
+            {' '}for real-time updates.
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {stats.map((stat) => (
-            <div key={stat.label} className="p-3 rounded-lg bg-white/5">
-              <div className="text-solaris-muted text-[11px] mb-1">{stat.label}</div>
-              <div
-                className={`font-mono font-semibold text-sm ${
-                  stat.color === 'gold'
-                    ? 'text-solaris-gold'
-                    : stat.color === 'cyan'
-                    ? 'text-solaris-cyan'
-                    : stat.color === 'emerald'
-                    ? 'text-emerald-400'
-                    : 'text-purple-400'
-                }`}
-              >
-                {loading && !data ? (
-                  <span className="animate-pulse">—</span>
-                ) : (
-                  stat.value
-                )}
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-busy={loading} aria-label={loading ? 'Loading pool stats' : undefined}>
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-3 rounded-lg bg-white/5">
+                  <div className="text-solaris-muted text-[11px] mb-1 animate-pulse h-3 bg-white/10 rounded w-3/4" />
+                  <div className="animate-pulse h-4 bg-white/10 rounded w-1/2" />
+                </div>
+              ))
+            : stats.map((stat) => (
+                <div key={stat.label} className="p-3 rounded-lg bg-white/5">
+                  <div className="text-solaris-muted text-[11px] mb-1">{stat.label}</div>
+                  <div
+                    className={`font-mono font-semibold text-sm ${
+                      stat.color === 'gold'
+                        ? 'text-solaris-gold'
+                        : stat.color === 'cyan'
+                        ? 'text-solaris-cyan'
+                        : stat.color === 'emerald'
+                        ? 'text-emerald-400'
+                        : 'text-purple-400'
+                    }`}
+                  >
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
         </div>
       )}
 
