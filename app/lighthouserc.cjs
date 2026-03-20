@@ -20,6 +20,9 @@ module.exports = {
         throttlingMethod: 'provided',
         /* Only audit the categories we care about */
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
+        /* Required in GitHub Actions (container) — Chrome refuses to start
+           without --no-sandbox in a non-privileged Linux environment. */
+        chromeFlags: '--no-sandbox --headless --disable-gpu',
       },
     },
     assert: {
